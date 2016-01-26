@@ -34,8 +34,13 @@ int main()
     //Construct PID Controller
     PID pidcontroller(dt, max, min, Kp, Kd, Ki); //PD controller (Ki=0)
 
-    //Initialise YARP
+    //Initialise and check YARP
     Network yarp;
+    if ( ! yarp.checkNetwork() ) {
+        fprintf(stderr,"[fail]\n%s found no yarp network (try running \"yarp detect --write\"), bye!\n",argv[0]);
+        return -1;
+    } else printf("[ok]\n");
+
 
     //YARP port for reading from sensor
     BufferedPort<Bottle> readPort;
