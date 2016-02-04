@@ -1,13 +1,7 @@
 #ifndef _PID_SOURCE_
 #define _PID_SOURCE_
 
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cmath>
 #include "pid.h"
-
-using namespace std;
 
 PID::PID( double dt, double max, double min, double Kp, double Kd, double Ki ) :
     _dt(dt),
@@ -30,7 +24,6 @@ double PID::calculate( double setpoint, double actual_value )
     double Pout = _Kp * error;
 
     // Integral term
-    //_integral = _integral + error * _dt;
     _integral = (_pre_error + error) * _dt;
     double Iout = _Ki * _integral;
 
@@ -40,6 +33,7 @@ double PID::calculate( double setpoint, double actual_value )
 
     // Calculate total output
     double output = Pout + Iout + Dout;
+    output = output * 10;
     //printf("Pout: %f\nIout: %f\nDout: %f\n",Pout,Iout,Dout);
 
     // Saturation
