@@ -1,18 +1,6 @@
 #ifndef _ratethread_H_
 #define _ratethread_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include "pid.h"
-
-#include <yarp/os/all.h>
-#include <yarp/dev/all.h>
-
-using namespace std;
-using namespace yarp::os;
-using namespace yarp::dev;
-
 class MyRateThread : public RateThread
 {
 public:
@@ -25,10 +13,9 @@ public:
         Network::connect("/inertial", "/inertial:i");
 
         /* This is for plot with python */
-//        writePort.open("/sender");
-//        Network::connect("/sender", "/reader");
+        writePort.open("/sender");
 
-        Time::delay(1);  //Wait for ports to open and connect [s]
+        Time::delay(5);  //Wait for ports to open and connect [s]
         return true;
     }
 
@@ -36,11 +23,13 @@ public:
     {
         readPort.close();
 
-//        writePort.close(); /* This is for plot with python */
+        /* This is for plot with python */
+        writePort.close();
     }
 
     void run()
     {
+
        //Read sensor
        Bottle *input = readPort.read();
        if (input == NULL)
@@ -70,30 +59,28 @@ public:
         double pid_output = pidcontroller->calculate(setpoint, actual_value);
         printf("PID output: %f\n", pid_output);
 
-        //Transform to range of velocity [deg/s]
-        double velocity = (((pid_output - min) * (max_vel - (-max_vel))) / (max - min)) + (-max_vel);
-        printf("Velocity output: %f deg/s\n\n", velocity);
-        printf("-------------------------------------\n\n");
+        printf("\n-------------------------------------\n\n");
 
         //Send motor torque through YARP
-        velLeftLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
-        velRightLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
+//        velLeftLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
+//        velRightLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
 
         /* This is for plot with python */
-//        send.addDouble(Xzmp);
-//        send.addDouble(velocity);
-//        writePort.write(send);
+        Bottle send;
+        send.addDouble(Xzmp);
+        send.addDouble(pid_output);
+        writePort.write(send);
     }
 
-    void setVelRightLeg(IVelocityControl *value)
-    {
-        velRightLeg = value;
-    }
+//    void setVelRightLeg(IVelocityControl *value)
+//    {
+//        velRightLeg = value;
+//    }
 
-    void setVelLeftLeg(IVelocityControl *value)
-    {
-        velLeftLeg = value;
-    }
+//    void setVelLeftLeg(IVelocityControl *value)
+//    {
+//        velLeftLeg = value;
+//    }
 
     void setPid(PID *value)
     {
@@ -103,12 +90,11 @@ public:
 private:
     BufferedPort<Bottle> readPort;                  //YARP port for reading from sensor
     PID* pidcontroller;                             //PID controller
-    IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
+//    IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
     double x,y,z,x2,y2,z2;
 
     /* This is for plot with python */
-//    Port writePort;                                 //YARP port for sending output
-//    Bottle send;
+    Port writePort;                                 //YARP port for sending output
 };
 
 #endif
