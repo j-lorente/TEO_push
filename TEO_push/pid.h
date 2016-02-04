@@ -7,8 +7,8 @@ class PID
 {
     public:
         // dt -  loop interval time [assumtion: s]
-        // max - maximum value of manipulated variable
-        // min - minimum value of manipulated variable
+        // max - maximum output value
+        // min - minimum output value
         // Kp -  proportional gain
         // Kd -  derivative gain
         // Ki -  Integral gain
