@@ -1,21 +1,23 @@
 #ifndef _PID_H_
 #define _PID_H_
 
+// [thanks] https://gist.github.com/bradley219/5373998
+
 class PID
 {
     public:
-        // dt -  loop interval time (s)
+        // dt -  loop interval time [assumtion: s]
         // max - maximum value of manipulated variable
         // min - minimum value of manipulated variable
         // Kp -  proportional gain
         // Kd -  derivative gain
         // Ki -  Integral gain
-        PID( double dt, double max, double min, double Kp, double Kd, double Ki );
+        PID( double dt, double max, double min, double Kp, double Kd, double Ki ); //Constructor
 
         // Returns the manipulated variable given a setpoint and the actual value
         double calculate( double setpoint, double actual_value );
 
-        ~PID();
+        ~PID(); //Destructor
 
     private:
         double _dt;
