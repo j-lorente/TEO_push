@@ -65,8 +65,7 @@ public:
         printf("ZMP = (%f, %f) cm\n", Xzmp, Yzmp);
 
         //PID
-        //double actual_value = Xzmp;
-        double actual_value = i;
+        double actual_value = Xzmp;
         double pid_output = pidcontroller->calculate(setpoint, actual_value);
         printf("PID output: %f\n", pid_output);
 
