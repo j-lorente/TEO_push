@@ -35,7 +35,8 @@ public:
     void threadRelease()
     {
         readPort.close();
-//        writePort.close();
+
+//        writePort.close(); /* This is for plot with python */
     }
 
     void run()
