@@ -26,12 +26,12 @@ public:
         z2 = -z;
         printf("Acceleration in X: %f m/s^2\n",x2);
         printf("Acceleration in Y: %f m/s^2\n",y2);
-        printf("Acceleration in Z: %f m/s^2\n\n",z2);
+        printf("Acceleration in Z: %f m/s^2\n",z2);
 
         //Calculation of the Zero-Moment Point
         double Xzmp = Xcom - (Zcom / z2)*x2; //ZMP X coordinate [cm]
         double Yzmp = Ycom - (Zcom / z2)*y2; //ZMP Y coordinate [cm]
-        printf("ZMP = (%f, %f) cm\n", Xzmp, Yzmp);
+        printf("\nZMP = (%f, %f) cm\n", Xzmp, Yzmp);
 
         //PID
         double actual_value = Xzmp;
@@ -40,8 +40,8 @@ public:
             double setpoint = Xzmp;
             *first_zmp = 1;
         }
+        //double setpoint = 0; //Desired value [cm]
         double pid_output = pidcontroller->calculate(setpoint, actual_value);
-        print("setpoint: %f\n", setpoint);
         printf("PID output: %f\n", pid_output);
 
         //Send motor torque through YARP
@@ -56,7 +56,9 @@ public:
         //send.addDouble(pid_output);
         //writePort.write(send);
 
-        cout << endl << "*****************************" << endl << endl;
+        printf("\nEnter value to exit...\n");
+        cout << "*******************************" << endl << endl;
+
     }
 
 //    void setVelRightLeg(IVelocityControl *value)
@@ -99,9 +101,8 @@ private:
     PID *pidcontroller;                             //PID controller
 //    IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
     IVelocityControl *velRightArm, *velLeftArm;     //Velocity controllers
-    double x,y,z,x2,y2,z2;
+    double x,y,z,x2,y2,z2, setpoint;
     int *first_zmp;
-    double setpoint;
 
     /* This is for plot with python */
     //Port writePort;                                 //YARP port for sending output
