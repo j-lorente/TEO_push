@@ -34,7 +34,6 @@ double PID::calculate( double setpoint, double actual_value )
     // Calculate total output
     double output = Pout + Iout + Dout;
     output = output * 10;
-    //printf("Pout: %f\nIout: %f\nDout: %f\n",Pout,Iout,Dout);
 
     // Saturation
     if( output > _max )
