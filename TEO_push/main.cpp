@@ -27,10 +27,8 @@ using namespace yarp::dev;
 #define Kp 0.079987 //Proportional gain
 #define Kd 0 //Derivative gain
 #define Ki 0.0015869 //Integral gain
-//#define setpoint 0 //Desired value [cm]
 
 #include "ratethread.h"
-
 
 int main(int argc, char *argv[])
 {
@@ -46,15 +44,18 @@ int main(int argc, char *argv[])
         return -1;
     } else printf("[success] YARP network found.\n");
 
-    BufferedPort<Bottle> readPort;                  //YARP port for reading from sensor
-    //Connect to IMU
+    //Open YARP ports
+    BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(0.5);  //Wait for ports to open and connect [s]
-    Network::connect("/inertial", "/inertial:i");
-    Time::delay(0.5);  //Wait for ports to open and connect [s]
 
     /* This is for plot with python */
-    //writePort.open("/sender");
+    //writePort.open("/sender");            //YARP port for writing output
+
+    Time::delay(0.5);  //Wait for ports to open [s]
+
+    //Connect to IMU
+    Network::connect("/inertial", "/inertial:i");
+    Time::delay(0.5);  //Wait for ports connect [s]
 
     //Connect to robot left leg
 //    Property optionsLeftLeg;                                //YARP class for storing name-value (key-value) pairs
@@ -151,20 +152,22 @@ int main(int argc, char *argv[])
     myRateThread.setFirstZMP(&first_zmp);
     myRateThread.start();
 
-    printf("Enter value to exit...\n");
+    //Wait for value
     char c;
-    cin >> c;  //This line is blocking - Wait for value
+    cin >> c;  //This line is blocking
 
     myRateThread.stop();
+    Time::delay(0.5);  //Wait for thread to stop [s]
+
 //    deviceRightLeg.close();
 //    deviceLeftLeg.close();
     deviceRightArm.close();
     deviceLeftArm.close();
-    Time::delay(0.5);  //Wait for thread to stop [s]
     readPort.close();
 
     /* This is for plot with python */
     //writePort.close();
+
     return 0;
 
 }
