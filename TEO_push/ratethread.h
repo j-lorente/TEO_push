@@ -6,32 +6,11 @@ class MyRateThread : public RateThread
 public:
     MyRateThread() : RateThread(dt*1000.0) {}  // Conversion to [ms]
 
-    bool threadInit()
-    {
-        //Connect to IMU
-        readPort.open("/inertial:i");
-        Network::connect("/inertial", "/inertial:i");
-
-        /* This is for plot with python */
-        writePort.open("/sender");
-
-        Time::delay(1);  //Wait for ports to open and connect [s]
-        return true;
-    }
-
-    void threadRelease()
-    {
-        readPort.close();
-
-        /* This is for plot with python */
-        writePort.close();
-    }
-
     void run()
     {
 
        //Read sensor
-       Bottle *input = readPort.read();
+       Bottle *input = readPort->read();
        if (input == NULL)
        {
             printf("[error] No data yet...\n");
@@ -56,22 +35,28 @@ public:
 
         //PID
         double actual_value = Xzmp;
+        if (*first_zmp==0)
+        {
+            double setpoint = Xzmp;
+            *first_zmp = 1;
+        }
         double pid_output = pidcontroller->calculate(setpoint, actual_value);
+        print("setpoint: %f\n", setpoint);
         printf("PID output: %f\n", pid_output);
 
         //Send motor torque through YARP
 //        velLeftLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
 //        velRightLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
-        velLeftArm->velocityMove(3, velocity);
-        velRightArm->velocityMove(3, velocity);
+        velLeftArm->velocityMove(3, pid_output);
+        velRightArm->velocityMove(3, -pid_output);
 
         /* This is for plot with python */
-        Bottle send;
-        send.addDouble(Xzmp);
-        send.addDouble(pid_output);
-        writePort.write(send);
+        //Bottle send;
+        //send.addDouble(Xzmp);
+        //send.addDouble(pid_output);
+        //writePort.write(send);
 
-        cout << endl << "-------------------------------------" << endl << endl;
+        cout << endl << "*****************************" << endl << endl;
     }
 
 //    void setVelRightLeg(IVelocityControl *value)
@@ -99,15 +84,27 @@ public:
         pidcontroller = value;
     }
 
+    void setReadPort(BufferedPort<Bottle> *value)
+    {
+        readPort = value;
+    }
+
+    void setFirstZMP(int *value)
+    {
+        first_zmp = value;
+    }
+
 private:
-    BufferedPort<Bottle> readPort;                  //YARP port for reading from sensor
-    PID* pidcontroller;                             //PID controller
+    BufferedPort<Bottle> *readPort;                  //YARP port for reading from sensor
+    PID *pidcontroller;                             //PID controller
 //    IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
     IVelocityControl *velRightArm, *velLeftArm;     //Velocity controllers
     double x,y,z,x2,y2,z2;
+    int *first_zmp;
+    double setpoint;
 
     /* This is for plot with python */
-    Port writePort;                                 //YARP port for sending output
+    //Port writePort;                                 //YARP port for sending output
 };
 
 #endif
