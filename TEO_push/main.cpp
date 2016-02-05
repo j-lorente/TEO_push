@@ -21,18 +21,20 @@ using namespace yarp::dev;
 #define Zcom 103.6602 //Distance to COM in Z axis [cm]
 
 //PID parameters
-#define dt 0.01 //Loop interval time [assumtion: s]
+#define dt 0.05 //Loop interval time [assumtion: s]
 #define max 10 //Maximum output value
 #define min -10 //Minimum output value
 #define Kp 0.079987 //Proportional gain
 #define Kd 0 //Derivative gain
 #define Ki 0.0015869 //Integral gain
-#define setpoint 0 //Desired value [cm]
+//#define setpoint 0 //Desired value [cm]
 
 #include "ratethread.h"
 
+
 int main(int argc, char *argv[])
 {
+    int first_zmp = 0;
 
     //Construct PID Controller
     PID pidcontroller(dt, max, min, Kp, Kd, Ki); //PI controller (Kd=0)
@@ -43,6 +45,16 @@ int main(int argc, char *argv[])
         fprintf(stderr,"[error] %s found no YARP network (try running \"yarp detect --write\").\n",argv[0]);
         return -1;
     } else printf("[success] YARP network found.\n");
+
+    BufferedPort<Bottle> readPort;                  //YARP port for reading from sensor
+    //Connect to IMU
+    readPort.open("/inertial:i");
+    Time::delay(0.5);  //Wait for ports to open and connect [s]
+    Network::connect("/inertial", "/inertial:i");
+    Time::delay(0.5);  //Wait for ports to open and connect [s]
+
+    /* This is for plot with python */
+    //writePort.open("/sender");
 
     //Connect to robot left leg
 //    Property optionsLeftLeg;                                //YARP class for storing name-value (key-value) pairs
@@ -135,6 +147,8 @@ int main(int argc, char *argv[])
     myRateThread.setVelRightArm(velRightArm);
     myRateThread.setVelLeftArm(velLeftArm);
     myRateThread.setPid(&pidcontroller);
+    myRateThread.setReadPort(&readPort);
+    myRateThread.setFirstZMP(&first_zmp);
     myRateThread.start();
 
     printf("Enter value to exit...\n");
@@ -147,7 +161,10 @@ int main(int argc, char *argv[])
     deviceRightArm.close();
     deviceLeftArm.close();
     Time::delay(0.5);  //Wait for thread to stop [s]
+    readPort.close();
 
+    /* This is for plot with python */
+    //writePort.close();
     return 0;
 
 }
