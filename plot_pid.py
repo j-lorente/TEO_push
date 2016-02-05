@@ -42,14 +42,12 @@ while True:
         #Graph 2
         plt.subplot(212)
         plt.plot([t], [vel],'bo')
-        plt.axis([0, 50, 35000, -35000])
+        plt.axis([0, 50, -12, 12])
         plt.xlabel('Time (s)')
         plt.ylabel('Velocity (deg/s)')
         
         #Plot graphs
         plt.show()
-        
-        #if(t%50=0) clean graph
         
         plt.pause(0.1)
         
