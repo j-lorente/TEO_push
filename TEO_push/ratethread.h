@@ -15,7 +15,7 @@ public:
         /* This is for plot with python */
         writePort.open("/sender");
 
-        Time::delay(5);  //Wait for ports to open and connect [s]
+        Time::delay(1);  //Wait for ports to open and connect [s]
         return true;
     }
 
@@ -59,17 +59,19 @@ public:
         double pid_output = pidcontroller->calculate(setpoint, actual_value);
         printf("PID output: %f\n", pid_output);
 
-        printf("\n-------------------------------------\n\n");
-
         //Send motor torque through YARP
 //        velLeftLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
 //        velRightLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
+        velLeftArm->velocityMove(3, velocity);
+        velRightArm->velocityMove(3, velocity);
 
         /* This is for plot with python */
         Bottle send;
         send.addDouble(Xzmp);
         send.addDouble(pid_output);
         writePort.write(send);
+
+        cout << endl << "-------------------------------------" << endl << endl;
     }
 
 //    void setVelRightLeg(IVelocityControl *value)
@@ -82,6 +84,16 @@ public:
 //        velLeftLeg = value;
 //    }
 
+    void setVelRightArm(IVelocityControl *value)
+    {
+        velRightArm = value;
+    }
+
+    void setVelLeftArm(IVelocityControl *value)
+    {
+        velLeftArm = value;
+    }
+
     void setPid(PID *value)
     {
         pidcontroller = value;
@@ -91,6 +103,7 @@ private:
     BufferedPort<Bottle> readPort;                  //YARP port for reading from sensor
     PID* pidcontroller;                             //PID controller
 //    IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
+    IVelocityControl *velRightArm, *velLeftArm;     //Velocity controllers
     double x,y,z,x2,y2,z2;
 
     /* This is for plot with python */
