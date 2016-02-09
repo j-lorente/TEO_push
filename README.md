@@ -3,19 +3,13 @@ Push-recovery experiments with humanoid robot TEO (UC3M)
 
 Instructions:
 
-	Terminal 1:
+	1. Terminal 1:	icubmoddev --device xsensmtx --verbose
 
-		icubmoddev --device xsensmtx --verbose
+	2. Terminal 2:	ssh [??] / ssh locomotion
 
-	Terminal 2:
+	3. Terminal 2:	launchLocomotion
 
-		ssh 2.2.2.51
-
-		launchManipulation
-
-	IDE:
-
-		Run
+	4. Launch exe
 
 
 
