@@ -45,10 +45,11 @@ public:
         printf("PID output: %f\n", pid_output);
 
         //Send motor torque through YARP
-//        velLeftLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
-//        velRightLeg->velocityMove(4, velocity);  //Fourth motor. Velocity [deg/s].
-        velLeftArm->velocityMove(3, pid_output);
-        velRightArm->velocityMove(3, -pid_output);
+//        velLeftLeg->velocityMove(4, pid_output);  //Fourth motor. Velocity [deg/s].
+//        velRightLeg->velocityMove(4, pid_output);  //Fourth motor. Velocity [deg/s].
+
+        velLeftLeg->velocityMove(4, 2.5);  //Fourth motor. Velocity [deg/s].
+        velRightLeg->velocityMove(4, 2.5);  //Fourth motor. Velocity [deg/s].
 
         /* This is for plot with python */
         //Bottle send;
@@ -61,24 +62,14 @@ public:
 
     }
 
-//    void setVelRightLeg(IVelocityControl *value)
-//    {
-//        velRightLeg = value;
-//    }
-
-//    void setVelLeftLeg(IVelocityControl *value)
-//    {
-//        velLeftLeg = value;
-//    }
-
-    void setVelRightArm(IVelocityControl *value)
+    void setVelRightLeg(IVelocityControl *value)
     {
-        velRightArm = value;
+        velRightLeg = value;
     }
 
-    void setVelLeftArm(IVelocityControl *value)
+    void setVelLeftLeg(IVelocityControl *value)
     {
-        velLeftArm = value;
+        velLeftLeg = value;
     }
 
     void setPid(PID *value)
@@ -99,8 +90,7 @@ public:
 private:
     BufferedPort<Bottle> *readPort;                  //YARP port for reading from sensor
     PID *pidcontroller;                             //PID controller
-//    IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
-    IVelocityControl *velRightArm, *velLeftArm;     //Velocity controllers
+    IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
     double x,y,z,x2,y2,z2, setpoint;
     int *first_zmp;
 
