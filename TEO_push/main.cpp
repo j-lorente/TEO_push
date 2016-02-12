@@ -24,9 +24,9 @@ using namespace yarp::dev;
 #define dt 0.05 //Loop interval time [assumtion: s]
 #define max 10 //Maximum output value
 #define min -10 //Minimum output value
-#define Kp 0.079987 //Proportional gain
+#define Kp 0.01 //Proportional gain
 #define Kd 0 //Derivative gain
-#define Ki 0.0015869 //Integral gain
+#define Ki 0 //Integral gain
 
 #include "ratethread.h"
 
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     int first_zmp = 0;
 
     //Construct PID Controller
-    PID pidcontroller(dt, max, min, Kp, Kd, Ki); //PI controller (Kd=0)
+    PID pidcontroller(dt, max, min, Kp, Kd, Ki); //P?PI?PD?
 
     //Initialise and check YARP
     Network yarp;
@@ -46,14 +46,13 @@ int main(int argc, char *argv[])
 
     //Open YARP ports
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
-    printf("1\n");
     readPort.open("/inertial:i");
-    printf("2\n");
 
     /* This is for plot with python */
-    //writePort.open("/sender");            //YARP port for writing output
+    Port writePort;
+    writePort.open("/sender");            //YARP port for writing output
 
-    Time::delay(1);  //Wait for ports to open [s]
+    Time::delay(2);  //Wait for ports to open [s]
 
     //Connect to IMU
     Network::connect("/inertial", "/inertial:i");
@@ -107,6 +106,7 @@ int main(int argc, char *argv[])
     myRateThread.setVelLeftLeg(velLeftLeg);
     myRateThread.setPid(&pidcontroller);
     myRateThread.setReadPort(&readPort);
+    myRateThread.setWritePort(&writePort);  /* This is for plot with python */
     myRateThread.setFirstZMP(&first_zmp);
     myRateThread.start();
 
@@ -120,9 +120,7 @@ int main(int argc, char *argv[])
     deviceRightLeg.close();
     deviceLeftLeg.close();
     readPort.close();
-
-    /* This is for plot with python */
-    //writePort.close();
+    writePort.close(); /* This is for plot with python */
 
     return 0;
 
