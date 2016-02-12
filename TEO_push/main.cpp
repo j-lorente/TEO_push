@@ -1,4 +1,4 @@
-// -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
+    // -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
 
 /* Juan Lorente - Masters' Thesis */
 /* Push-recovery experiments with robot TEO */
@@ -46,12 +46,14 @@ int main(int argc, char *argv[])
 
     //Open YARP ports
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
+    printf("1\n");
     readPort.open("/inertial:i");
+    printf("2\n");
 
     /* This is for plot with python */
     //writePort.open("/sender");            //YARP port for writing output
 
-    Time::delay(0.5);  //Wait for ports to open [s]
+    Time::delay(1);  //Wait for ports to open [s]
 
     //Connect to IMU
     Network::connect("/inertial", "/inertial:i");
@@ -79,7 +81,7 @@ int main(int argc, char *argv[])
     velLeftLeg->setVelocityMode();
 
     //Connect to robot right leg
-    Property optionsRightLeg;;                                //YARP class for storing name-value (key-value) pairs
+    Property optionsRightLeg;                                //YARP class for storing name-value (key-value) pairs
     optionsRightLeg.put("device","remote_controlboard");      //YARP device
     optionsRightLeg.put("remote","/teo/rightLeg");            //To what will be connected
     optionsRightLeg.put("local","/juan/rightLeg");            //How will be called on YARP network

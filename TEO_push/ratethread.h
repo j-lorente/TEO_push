@@ -37,10 +37,10 @@ public:
         double actual_value = Xzmp;
         if (*first_zmp==0)
         {
-            double setpoint = Xzmp;
+            setpoint = Xzmp;
             *first_zmp = 1;
         }
-        //double setpoint = 0; //Desired value [cm]
+        //setpoint = 0; //Desired value [cm]
         double pid_output = pidcontroller->calculate(setpoint, actual_value);
         printf("PID output: %f\n", pid_output);
 
@@ -48,8 +48,8 @@ public:
 //        velLeftLeg->velocityMove(4, pid_output);  //Fourth motor. Velocity [deg/s].
 //        velRightLeg->velocityMove(4, pid_output);  //Fourth motor. Velocity [deg/s].
 
-        velLeftLeg->velocityMove(4, 2.5);  //Fourth motor. Velocity [deg/s].
-        velRightLeg->velocityMove(4, 2.5);  //Fourth motor. Velocity [deg/s].
+//        velLeftLeg->velocityMove(4, 0.5);  //Fourth motor. Velocity [deg/s].
+        //velRightLeg->velocityMove(4, 0.5);  //Fourth motor. Velocity [deg/s].
 
         /* This is for plot with python */
         //Bottle send;
@@ -91,8 +91,9 @@ private:
     BufferedPort<Bottle> *readPort;                  //YARP port for reading from sensor
     PID *pidcontroller;                             //PID controller
     IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
-    double x,y,z,x2,y2,z2, setpoint;
+    double x,y,z,x2,y2,z2;
     int *first_zmp;
+    double setpoint;
 
     /* This is for plot with python */
     //Port writePort;                                 //YARP port for sending output
