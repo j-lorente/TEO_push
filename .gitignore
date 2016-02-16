@@ -1,3 +1,5 @@
+# Specifies intentionally untracked files to ignore #
+
 # CMake
 CMakeLists.txt.user
 build/
