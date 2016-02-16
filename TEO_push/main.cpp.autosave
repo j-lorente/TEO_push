@@ -1,7 +1,8 @@
     // -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
 
-/* Juan Lorente - Masters' Thesis */
-/* Push-recovery experiments with robot TEO */
+/*  Juan Lorente                                */
+/*  Masters' Thesis                             */
+/*  Push-recovery experiments with robot TEO    */
 
 #include <stdio.h>
 #include <stdlib.h>

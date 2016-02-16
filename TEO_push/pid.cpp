@@ -2,6 +2,11 @@
 #define _PID_SOURCE_
 
 #include "pid.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <yarp/os/all.h>
+#include <yarp/dev/all.h>
 
 PID::PID( double dt, double max, double min, double Kp, double Kd, double Ki ) :
     _dt(dt),
@@ -33,7 +38,6 @@ double PID::calculate( double setpoint, double actual_value )
 
     // Calculate total output
     double output = Pout + Iout + Dout;
-    output = output * 10;
 
     // Saturation
     if( output > _max )

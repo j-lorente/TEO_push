@@ -28,23 +28,15 @@ while True:
         output = yarp.Bottle()
         input_port.read(output)
         ZMP=output.get(0).asDouble()
-        vel=output.get(1).asDouble()
+        setpoint=output.get(1).asDouble()
         
         t = time.time() - t0
         
         #Graph 1
-        plt.subplot(211)
-        plt.plot([t], [ZMP],'ro')
+        plt.plot([t], [ZMP],'bo', [t], [setpoint],'ro')
         plt.axis([0, 50, -20, 20])
         plt.xlabel('Time (s)')
-        plt.ylabel('ZMPx (cm)')
-        
-        #Graph 2
-        plt.subplot(212)
-        plt.plot([t], [vel],'bo')
-        plt.axis([0, 50, -12, 12])
-        plt.xlabel('Time (s)')
-        plt.ylabel('Velocity (deg/s)')
+        plt.ylabel('ZMP (cm)')
         
         #Plot graphs
         plt.show()

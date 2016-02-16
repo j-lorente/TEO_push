@@ -34,25 +34,30 @@ public:
         printf("\nZMP = (%f, %f) cm\n", Xzmp, Yzmp);
 
         //PID
-        double actual_value = Xzmp;
+        actual_value = Xzmp;
         if (*first_zmp==0)
         {
             //setpoint = Xzmp;
             *first_zmp = 1;
         }
         setpoint = 0; //Desired value [cm]
-        double pid_output = pidcontroller->calculate(setpoint, actual_value);
+        pid_output = pidcontroller->calculate(setpoint, actual_value);
+        pid_output = -pid_output;
         printf("Setpoint: %f\n", setpoint);
         printf("PID output: %f\n", pid_output);
 
         //Send motor torque through YARP
-        velLeftLeg->velocityMove(4, -pid_output);  //Fourth motor. Velocity [deg/s].
-        velRightLeg->velocityMove(4, -pid_output);  //Fourth motor. Velocity [deg/s].
+        velLeftLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
+        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
+
+//        //Ask for velocity and position
+//        velocity = ;
+//        position = ;
 
         /* This is for plot with python */
         Bottle send;
         send.addDouble(Xzmp);
-        send.addDouble(pid_output);
+        send.addDouble(setpoint);
         writePort->write(send);
 
         printf("\nEnter value to exit...\n");
@@ -91,12 +96,12 @@ public:
     }
 
 private:
-    BufferedPort<Bottle> *readPort;                  //YARP port for reading from sensor
+    BufferedPort<Bottle> *readPort;                 //YARP port for reading from sensor
     PID *pidcontroller;                             //PID controller
     IVelocityControl *velRightLeg, *velLeftLeg;     //Velocity controllers
     double x,y,z,x2,y2,z2;
     int *first_zmp;
-    double setpoint, Xzmp, Yzmp;
+    double Xzmp, Yzmp, actual_value, setpoint, pid_output;
     Port *writePort;  /* This is for plot with python */   //YARP port for sending output
 };
 
