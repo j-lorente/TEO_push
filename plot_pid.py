@@ -44,4 +44,3 @@ while True:
         plt.pause(0.1)
         
 
-
