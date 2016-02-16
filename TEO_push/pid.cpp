@@ -2,11 +2,6 @@
 #define _PID_SOURCE_
 
 #include "pid.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <yarp/os/all.h>
-#include <yarp/dev/all.h>
 
 PID::PID( double dt, double max, double min, double Kp, double Kd, double Ki ) :
     _dt(dt),
