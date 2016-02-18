@@ -8,42 +8,42 @@ public:
 
     void run()
     {
-       //Reset of average variables
+       //RESET OF AVERAGE VARIABLES
        x_sensor = 0.0;
        y_sensor = 0.0;
        z_sensor = 0.0;
 
-       //Read sensor
-       for(int i=0;i<samples;i++)
-       {
-           Bottle *input = readPort->read();
-           if (input==NULL)
-           {
-                printf("[error] No data from sensor...\n");
-                return;
-            }
-            x_sensor = x_sensor + input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
-            y_sensor = y_sensor + input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
-            z_sensor = z_sensor + input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
-       }
+//       //READ SENSOR
+//       for(int i=0;i<samples;i++)
+//       {
+//           Bottle *input = readPort->read();
+//           if (input==NULL)
+//           {
+//                printf("[error] No data from sensor...\n");
+//                return;
+//            }
+//            x_sensor = x_sensor + input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
+//            y_sensor = y_sensor + input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
+//            z_sensor = z_sensor + input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
+//       }
 
-        //Low-pass Filter (Average)
-        x = x_sensor / samples;
-        y = y_sensor / samples;
-        z = z_sensor / samples;
+//        //Low-pass Filter (Average)
+//        x = x_sensor / samples;
+//        y = y_sensor / samples;
+//        z = z_sensor / samples;
 
-//        //Read sensor
-//            Bottle *input = readPort->read();
-//            if (input==NULL)
-//            {
-//                 printf("[error] No data from sensor...\n");
-//                 return;
-//             }
-//             x = input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
-//             y = input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
-//             z = input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
+        //READ SENSOR
+        Bottle *input = readPort->read();
+        if (input==NULL)
+        {
+            printf("[error] No data from sensor...\n");
+            return;
+        }
+        x = input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
+        y = input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
+        z = input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
 
-        //Transformation from sensor coordinates to robot coordinates
+        //TRANSFORMATION FROM SENSOR COORDINATES TO ROBOT COORDINATES
         x_robot = -x;
         y_robot = y;
         z_robot = -z;
@@ -51,7 +51,7 @@ public:
         printf("Acceleration in Y: %f m/s^2\n",y_robot);
         printf("Acceleration in Z: %f m/s^2\n",z_robot);
 
-        //Calculation of the Zero-Moment Point
+        //CALCULATION OF THE ZERO MOMENT POINT
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
         printf("\nZMP = (%f, %f) cm\n", Xzmp, Yzmp);
@@ -68,35 +68,36 @@ public:
         printf("Setpoint: %f\n", setpoint);
         printf("PID output: %f\n", pid_output);
 
-        //Send motor torque through YARP
+        //SEND MOTOR VELOCITY THROUGH YARP
 //        velLeftLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 //        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 
-        /* This is for plot with python */
-        Bottle send;
-        send.addDouble(Xzmp);
-        writePort->write(send);
+        //SAVE DATA IN EXTERNAL FILE
+        ofstream out;
+        out.open("data.txt",ios::app);
+        out << Xzmp ;
+        out << setpoint << endl;
+        out.close();
 
         printf("\nPress ENTER to exit...\n\n");
         cout << "*******************************" << endl << endl;
 
     }
 
-//    void setVels(IVelocityControl *value, IVelocityControl *value0)
-//    {
-//        velRightLeg = value;
-//        velLeftLeg = value0;
-//    }
+    void setVels(IVelocityControl *value, IVelocityControl *value0)
+    {
+        velRightLeg = value;
+        velLeftLeg = value0;
+    }
 
     void setPid(PID *value)
     {
         pidcontroller = value;
     }
 
-    void setPorts(BufferedPort<Bottle> *value, Port *value0)
+    void setPorts(BufferedPort<Bottle> *value)
     {
         readPort = value;
-        writePort = value0; /* This is for plot with python */
     }
 
     void setFirstValues()
@@ -106,9 +107,8 @@ public:
 
 private:
     BufferedPort<Bottle> *readPort;                                         //YARP port for reading from sensor
-    Port *writePort; /* This is for plot with python */                     //YARP port for sending output
     PID *pidcontroller;                                                     //PID controller
-//    IVelocityControl *velRightLeg, *velLeftLeg;                             //Velocity controllers
+    IVelocityControl *velRightLeg, *velLeftLeg;                             //Velocity controllers
     int first_zmp;
     double Xzmp, Yzmp, actual_value, setpoint, pid_output;
     double x, y, z, x_sensor, y_sensor, z_sensor, x_robot, y_robot, z_robot;

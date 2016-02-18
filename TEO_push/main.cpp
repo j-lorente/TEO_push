@@ -9,6 +9,7 @@
 #include <math.h>
 #include <yarp/os/all.h>
 #include <yarp/dev/all.h>
+#include <fstream>
 
 #include "pid.h"
 
@@ -47,15 +48,10 @@ int main(int argc, char *argv[])
         return -1;
     } else printf("[success] YARP network found.\n");
 
-    //OPEN YARP PORTS
+    //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-
-    /* This is for plot with python */
-    Port writePort;
-    writePort.open("/sender");            //YARP port for writing output
-
-    Time::delay(2);  //Wait for ports to open [s]
+    Time::delay(2);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
@@ -107,7 +103,7 @@ int main(int argc, char *argv[])
     MyRateThread myRateThread;
 //    myRateThread.setVels(velRightLeg, velLeftLeg);
     myRateThread.setPid(&pidcontroller);
-    myRateThread.setPorts(&readPort, &writePort);
+    myRateThread.setPorts(&readPort);
     myRateThread.setFirstValues();
     myRateThread.start();
 
@@ -123,7 +119,6 @@ int main(int argc, char *argv[])
 //    deviceRightLeg.close();
 //    deviceLeftLeg.close();
     readPort.close();
-    writePort.close(); /* This is for plot with python */
 
     return 0;
 }
