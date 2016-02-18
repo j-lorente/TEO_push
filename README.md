@@ -14,9 +14,3 @@ Instructions:
 	5. Terminal 2:	launchLocomotion
 
 	6. Launch exe
-
-
-
-Note:
-
-Lines marked with "This is for plot with python" are for using along with the external python application in order to plot the PID results in a graph.
