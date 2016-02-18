@@ -48,5 +48,4 @@ double PID::calculate( double setpoint, double actual_value )
 
 PID::~PID(){}
 
-
 #endif
