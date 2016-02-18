@@ -32,17 +32,6 @@ public:
         y = y_sensor / samples;
         z = z_sensor / samples;
 
-//        //Read sensor
-//            Bottle *input = readPort->read();
-//            if (input==NULL)
-//            {
-//                 printf("[error] No data from sensor...\n");
-//                 return;
-//             }
-//             x = input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
-//             y = input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
-//             z = input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
-
         //Transformation from sensor coordinates to robot coordinates
         x_robot = -x;
         y_robot = y;
@@ -69,8 +58,8 @@ public:
         printf("PID output: %f\n", pid_output);
 
         //Send motor torque through YARP
-//        velLeftLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
-//        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
+        velLeftLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
+        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 
         /* This is for plot with python */
         Bottle send;
@@ -82,11 +71,11 @@ public:
 
     }
 
-//    void setVels(IVelocityControl *value, IVelocityControl *value0)
-//    {
-//        velRightLeg = value;
-//        velLeftLeg = value0;
-//    }
+    void setVels(IVelocityControl *value, IVelocityControl *value0)
+    {
+        velRightLeg = value;
+        velLeftLeg = value0;
+    }
 
     void setPid(PID *value)
     {
@@ -108,7 +97,7 @@ private:
     BufferedPort<Bottle> *readPort;                                         //YARP port for reading from sensor
     Port *writePort; /* This is for plot with python */                     //YARP port for sending output
     PID *pidcontroller;                                                     //PID controller
-//    IVelocityControl *velRightLeg, *velLeftLeg;                             //Velocity controllers
+    IVelocityControl *velRightLeg, *velLeftLeg;                             //Velocity controllers
     int first_zmp;
     double Xzmp, Yzmp, actual_value, setpoint, pid_output;
     double x, y, z, x_sensor, y_sensor, z_sensor, x_robot, y_robot, z_robot;
