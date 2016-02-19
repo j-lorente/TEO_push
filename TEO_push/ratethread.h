@@ -1,6 +1,8 @@
 #ifndef _ratethread_H_
 #define _ratethread_H_
 
+#include <sys/timeb.h>
+
 class MyRateThread : public RateThread
 {
 public:
@@ -8,40 +10,36 @@ public:
 
     void run()
     {
+
+        //GET INITIAL TIME
+        if (first_zmp==0)
+        {
+            init_time = getMilliCount();
+        }
+
        //RESET OF AVERAGE VARIABLES
        x_sensor = 0.0;
        y_sensor = 0.0;
        z_sensor = 0.0;
 
-//       //READ SENSOR
-//       for(int i=0;i<samples;i++)
-//       {
-//           Bottle *input = readPort->read();
-//           if (input==NULL)
-//           {
-//                printf("[error] No data from sensor...\n");
-//                return;
-//            }
-//            x_sensor = x_sensor + input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
-//            y_sensor = y_sensor + input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
-//            z_sensor = z_sensor + input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
-//       }
+       //READ SENSOR
+       for(int i=0;i<samples;i++)
+       {
+           Bottle *input = readPort->read();
+           if (input==NULL)
+           {
+                printf("[error] No data from sensor...\n");
+                return;
+            }
+            x_sensor = x_sensor + input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
+            y_sensor = y_sensor + input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
+            z_sensor = z_sensor + input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
+       }
 
-//        //Low-pass Filter (Average)
-//        x = x_sensor / samples;
-//        y = y_sensor / samples;
-//        z = z_sensor / samples;
-
-        //READ SENSOR
-        Bottle *input = readPort->read();
-        if (input==NULL)
-        {
-            printf("[error] No data from sensor...\n");
-            return;
-        }
-        x = input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
-        y = input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
-        z = input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
+        //Low-pass Filter (Average)
+        x = x_sensor / samples;
+        y = y_sensor / samples;
+        z = z_sensor / samples;
 
         //TRANSFORMATION FROM SENSOR COORDINATES TO ROBOT COORDINATES
         x_robot = -x;
@@ -61,10 +59,8 @@ public:
         if (first_zmp==0)
         {
             setpoint = Xzmp; //Get initial position as setpoint [cm]
-            first_zmp = 1;
         }
-        pid_output = pidcontroller->calculate(setpoint, actual_value); //PROBAR PONIENDO AQUI EL MENOS (-)
-        pid_output = -pid_output;
+        pid_output = - pidcontroller->calculate(setpoint, actual_value);
         printf("Setpoint: %f\n", setpoint);
         printf("PID output: %f\n", pid_output);
 
@@ -72,16 +68,40 @@ public:
 //        velLeftLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 //        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 
+        //GET CURRENT TIME
+        act_time = getMilliSpan(init_time);
+        cout << "Time passed: " << act_time << " ms" << endl;
+
         //SAVE DATA IN EXTERNAL FILE
         ofstream out;
-        out.open("data.txt",ios::app);
-        out << Xzmp ;
-        out << setpoint << endl;
+        if (first_zmp==0)
+        {
+            out.open("data.txt",ios::trunc); //The first time deletes previous content
+            first_zmp = 1;
+        }
+        else {out.open("data.txt",ios::app);} //The following times appends data to the file
+        out << act_time/1000;
+        out << " ";
+        out << Xzmp << endl;
         out.close();
 
         printf("\nPress ENTER to exit...\n\n");
         cout << "*******************************" << endl << endl;
 
+    }
+
+    int getMilliCount(){
+        timeb tb;
+        ftime(&tb);
+        int nCount = tb.millitm + (tb.time & 0xfffff) * 1000;
+        return nCount;
+    }
+
+    int getMilliSpan(int nTimeStart){
+        int nSpan = getMilliCount() - nTimeStart;
+        if(nSpan < 0)
+            nSpan += 0x100000 * 1000;
+        return nSpan;
     }
 
     void setVels(IVelocityControl *value, IVelocityControl *value0)
@@ -112,6 +132,7 @@ private:
     int first_zmp;
     double Xzmp, Yzmp, actual_value, setpoint, pid_output;
     double x, y, z, x_sensor, y_sensor, z_sensor, x_robot, y_robot, z_robot;
+    int init_time, act_time;
 };
 
 #endif
