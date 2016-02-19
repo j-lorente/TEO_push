@@ -9,39 +9,18 @@ This is for plotting data from the main program
 """
 
 import matplotlib.pyplot as plt
-import yarp
-import time
+import numpy as np
 
-#Initialise YARP
-yarp.Network.init()
+data=np.loadtxt('build/data.txt')
 
-#Create a YARP port and connect it to the output port
-input_port = yarp.Port()
-input_port.open("/reader")
-yarp.Network.connect("/sender", "/reader")
+t = data[:,0]
+zmp = data[:,1]
+setpoint = data[:,2]
 
-#Get initial time
-t0 = time.time()
-
-while True:
-     
-        #Read the data from the YARP port
-        output = yarp.Bottle()
-        input_port.read(output)
-        ZMP=output.get(0).asDouble()
-        #setpoint=output.get(1).asDouble()
-        
-        #Get actual time
-        t = time.time() - t0
-        
-        #Plot graph
-        #plt.plot([t], [ZMP],'bo', [t], [setpoint],'ro')
-        plt.plot([t], [ZMP],'ro')
-        plt.axis([0, 50, -5, 5])
-        plt.xlabel('Time (s)')
-        plt.ylabel('ZMP (cm)')
-        plt.show()
-        
-        plt.pause(0.1)
-        
-
+plt.plot(t, zmp, linestyle='-', color='b', label='ZMP')
+plt.plot(t, setpoint, linestyle='-', color='r', label='setpoint')
+plt.axis([0, 10, -11, 11])
+plt.xlabel('s')
+plt.ylabel('cm')
+plt.legend()
+plt.show()
