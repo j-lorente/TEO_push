@@ -10,6 +10,7 @@
 #include <yarp/os/all.h>
 #include <yarp/dev/all.h>
 #include <fstream>
+#include <time.h>
 
 #include "pid.h"
 
@@ -23,7 +24,7 @@ using namespace yarp::dev;
 #define Zcom 103.6602 //Distance to COM in Z axis [cm]
 
 //Low-pass Filter
-#define samples 20 //Number of samples for computing average
+#define samples 5 //Number of samples for computing average
 
 //PID parameters
 #define dt 0.05 //Loop interval time [assumtion: s]
@@ -38,6 +39,7 @@ using namespace yarp::dev;
 
 int main(int argc, char *argv[])
 {
+
     //CONSTRUCT PID CONTROLLER
     PID pidcontroller(dt, max, min, Kp, Kd, Ki); //P?PI?PD?
 
@@ -51,7 +53,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(2);  //Wait for port to open [s]
+    Time::delay(3);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");

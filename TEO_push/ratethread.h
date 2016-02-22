@@ -12,10 +12,11 @@ public:
     {
 
         //GET INITIAL TIME
-        if (first_zmp==0)
+        if (first_iteration==0)
         {
             init_time = getMilliCount();
         }
+        init_loop = getMilliCount();
 
        //RESET OF AVERAGE VARIABLES
        x_sensor = 0.0;
@@ -41,7 +42,7 @@ public:
         y = y_sensor / samples;
         z = z_sensor / samples;
 
-        //TRANSFORMATION FROM SENSOR COORDINATES TO ROBOT COORDINATES
+        //CONVERSION FROM SENSOR COORDINATES TO ROBOT COORDINATES
         x_robot = -x;
         y_robot = y;
         z_robot = -z;
@@ -54,9 +55,13 @@ public:
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
         printf("\nZMP = (%f, %f) cm\n", Xzmp, Yzmp);
 
+        //CALCULATE ZMP ERROR
+        ZMPerror = getError();
+        cout << "ZMP(x) error: +/- " << ZMPerror << " cm" << endl;
+
         //PID
         actual_value = Xzmp;
-        if (first_zmp==0)
+        if (first_iteration==0)
         {
             setpoint = Xzmp; //Get initial position as setpoint [cm]
         }
@@ -70,24 +75,44 @@ public:
 
         //GET CURRENT TIME
         act_time = getMilliSpan(init_time);
-        cout << "Time passed: " << act_time << " ms" << endl;
+        act_loop = getMilliSpan(init_loop);
+        cout << "Absolute time: " << act_time << " ms" << endl;
+        cout << "Loop time: " << act_loop << " ms" << endl;
 
         //SAVE DATA IN EXTERNAL FILE
-        ofstream out;
-        if (first_zmp==0)
-        {
-            out.open("data.txt",ios::trunc); //The first time deletes previous content
-            first_zmp = 1;
-        }
-        else {out.open("data.txt",ios::app);} //The following times appends data to the file
-        out << act_time/1000;
-        out << " ";
-        out << Xzmp << endl;
-        out.close();
+        saveInFile(first_iteration, act_time, Xzmp, setpoint);
+
+        //NOT FIRST ZMP ANYMORE
+        first_iteration = 1;
 
         printf("\nPress ENTER to exit...\n\n");
         cout << "*******************************" << endl << endl;
 
+    }
+
+    double getError(){
+        if (first_iteration==0)
+        {
+            maxZMP = Xzmp;
+            minZMP = Xzmp;
+        }
+        if (Xzmp > maxZMP)
+        {
+            maxZMP = Xzmp;
+        }
+        if (Xzmp < minZMP)
+        {
+            minZMP = Xzmp;
+        }
+        return (maxZMP - minZMP)/2;
+    }
+
+    void saveInFile(int first_iteration, int act_time, double Xzmp, double setpoint){
+        ofstream out;
+        if (first_iteration==0) {out.open("data.txt",ios::trunc);}    //The first time deletes previous content
+        else {out.open("data.txt",ios::app);}                   //The following times appends data to the file
+        out << act_time << " " << Xzmp << " " << setpoint << endl;
+        out.close();
     }
 
     int getMilliCount(){
@@ -122,17 +147,18 @@ public:
 
     void setFirstValues()
     {
-        first_zmp = 0;
+        first_iteration = 0;
     }
 
 private:
     BufferedPort<Bottle> *readPort;                                         //YARP port for reading from sensor
     PID *pidcontroller;                                                     //PID controller
     IVelocityControl *velRightLeg, *velLeftLeg;                             //Velocity controllers
-    int first_zmp;
+    int first_iteration;
     double Xzmp, Yzmp, actual_value, setpoint, pid_output;
     double x, y, z, x_sensor, y_sensor, z_sensor, x_robot, y_robot, z_robot;
-    int init_time, act_time;
+    int init_time, act_time, init_loop, act_loop;
+    double maxZMP, minZMP, ZMPerror;
 };
 
 #endif
