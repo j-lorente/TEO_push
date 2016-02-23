@@ -11,6 +11,7 @@
 #include <yarp/dev/all.h>
 #include <fstream>
 #include <time.h>
+#include <deque>
 
 #include "pid.h"
 
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(3);  //Wait for port to open [s]
+    Time::delay(1);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
@@ -103,10 +104,8 @@ int main(int argc, char *argv[])
 
     //CONTROL LOOP
     MyRateThread myRateThread;
-//    myRateThread.setVels(velRightLeg, velLeftLeg);
-    myRateThread.setPid(&pidcontroller);
-    myRateThread.setPorts(&readPort);
-    myRateThread.setFirstValues();
+//    myRateThread.set(velRightLeg, velLeftLeg, &pidcontroller, &readPort);
+    myRateThread.set(&pidcontroller, &readPort);
     myRateThread.start();
 
     //WAIT FOR ENTER AND EXIT LOOP

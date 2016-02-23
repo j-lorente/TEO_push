@@ -1,63 +1,77 @@
 #ifndef _ratethread_H_
 #define _ratethread_H_
 
-#include <sys/timeb.h>
-
 class MyRateThread : public RateThread
 {
 public:
-    MyRateThread() : RateThread(dt*1000.0) {} // Conversion to [ms]
+    MyRateThread() : RateThread(dt*1000.0) {    // Conversion to [ms]
+        x_sensor.resize(samples);
+        y_sensor.resize(samples);
+        z_sensor.resize(samples);
+        first_iteration = 0;
+        iteration = 1;
+        act_loop_acum = 0;
+    }
 
     void run()
     {
+        getInitialTime(first_iteration);
 
-        //GET INITIAL TIME
-        if (first_iteration==0)
+        x_sensor.push_front(1);
+        x_sensor.pop_back();
+
+        cout << "mydeque contains:";
+          for (deque<double>::iterator it = x_sensor.begin(); it != x_sensor.end(); it++)
+            cout << ' ' << *it;
+          cout << '\n';
+
+
+//       //RESET OF AVERAGE VARIABLES
+//       x_sensor = 0.0;
+//       y_sensor = 0.0;
+//       z_sensor = 0.0;
+
+//       //READ SENSOR
+//       for(int i=0;i<samples;i++)
+//       {
+//           Bottle *input = readPort->read();
+//           if (input==NULL)
+//           {
+//                printf("[error] No data from sensor...\n");
+//                return;
+//            }
+//            x_sensor = x_sensor + input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
+//            y_sensor = y_sensor + input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
+//            z_sensor = z_sensor + input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
+//       }
+
+//        //Low-pass Filter (Average)
+//        x = x_sensor / samples;
+//        y = y_sensor / samples;
+//        z = z_sensor / samples;
+
+        //READ SENSOR
+        Bottle *input = readPort->read();
+        if (input==NULL)
         {
-            init_time = getMilliCount();
-        }
-        init_loop = getMilliCount();
-
-       //RESET OF AVERAGE VARIABLES
-       x_sensor = 0.0;
-       y_sensor = 0.0;
-       z_sensor = 0.0;
-
-       //READ SENSOR
-       for(int i=0;i<samples;i++)
-       {
-           Bottle *input = readPort->read();
-           if (input==NULL)
-           {
-                printf("[error] No data from sensor...\n");
-                return;
-            }
-            x_sensor = x_sensor + input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
-            y_sensor = y_sensor + input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
-            z_sensor = z_sensor + input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
-       }
-
-        //Low-pass Filter (Average)
-        x = x_sensor / samples;
-        y = y_sensor / samples;
-        z = z_sensor / samples;
+             printf("[error] No data from sensor...\n");
+             return;
+         }
+         x = input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
+         y = input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
+         z = input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
 
         //CONVERSION FROM SENSOR COORDINATES TO ROBOT COORDINATES
         x_robot = -x;
         y_robot = y;
         z_robot = -z;
-        printf("Acceleration in X: %f m/s^2\n",x_robot);
-        printf("Acceleration in Y: %f m/s^2\n",y_robot);
-        printf("Acceleration in Z: %f m/s^2\n",z_robot);
 
         //CALCULATION OF THE ZERO MOMENT POINT
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
-        printf("\nZMP = (%f, %f) cm\n", Xzmp, Yzmp);
 
         //CALCULATE ZMP ERROR
         ZMPerror = getError();
-        cout << "ZMP(x) error: +/- " << ZMPerror << " cm" << endl;
 
         //PID
         actual_value = Xzmp;
@@ -66,31 +80,59 @@ public:
             setpoint = Xzmp; //Get initial position as setpoint [cm]
         }
         pid_output = - pidcontroller->calculate(setpoint, actual_value);
-        printf("Setpoint: %f\n", setpoint);
-        printf("PID output: %f\n", pid_output);
 
         //SEND MOTOR VELOCITY THROUGH YARP
 //        velLeftLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 //        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 
-        //GET CURRENT TIME
-        act_time = getMilliSpan(init_time);
-        act_loop = getMilliSpan(init_loop);
-        cout << "Absolute time: " << act_time << " ms" << endl;
-        cout << "Loop time: " << act_loop << " ms" << endl;
+        //saveInFile(first_iteration, act_time, Xzmp, setpoint); //Save data in external file
 
-        //SAVE DATA IN EXTERNAL FILE
-        saveInFile(first_iteration, act_time, Xzmp, setpoint);
+        first_iteration = 1; //Not first iteration anymore
 
-        //NOT FIRST ZMP ANYMORE
-        first_iteration = 1;
+        getCurrentTime(init_time, init_loop, act_loop_acum, act_loop_avg, iteration);
 
-        printf("\nPress ENTER to exit...\n\n");
+        printData(x_robot, y_robot, z_robot, Xzmp, Yzmp, ZMPerror, setpoint, pid_output, act_time, act_loop_avg);
+
+        cout << endl << "Press ENTER to exit..." << endl;
         cout << "*******************************" << endl << endl;
 
+        iteration++;
     }
 
-    double getError(){
+    void getInitialTime(int first_iteration)
+    {
+        if (first_iteration==0)
+        {
+            init_time = Time::now();
+        }
+        init_loop = Time::now();
+    }
+
+    void getCurrentTime(double init_time, double init_loop, double act_loop_acum,
+                        double act_loop_average, int iteration)
+    {
+        act_time = Time::now() - init_time;
+        act_loop = Time::now() - init_loop;
+        act_loop_acum = act_loop_acum + act_loop;
+        act_loop_avg = act_loop_acum / iteration;
+    }
+
+    void printData(double x_robot, double y_robot, double z_robot, double Xzmp, double Yzmp, double ZMPerror,
+                   double setpoint, double pid_output, double act_time, double act_loop_avg)
+    {
+        cout << "Acceleration in X = " << x_robot << " m/s^2" << endl;
+        cout << "Acceleration in Y = " << y_robot << " m/s^2" << endl;
+        cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
+        cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
+        //cout << "ZMP(x) error = +/- " << ZMPerror << " cm" << endl;
+        cout << "Setpoint = " << setpoint << endl;
+        cout << "PID output = " << pid_output << endl << endl;
+        cout << "Loop time: " << act_loop_avg*1000 << " ms" << endl;
+        cout << "Absolute time: " << int(act_time) << " s" << endl;
+    }
+
+    double getError()
+    {
         if (first_iteration==0)
         {
             maxZMP = Xzmp;
@@ -107,58 +149,44 @@ public:
         return (maxZMP - minZMP)/2;
     }
 
-    void saveInFile(int first_iteration, int act_time, double Xzmp, double setpoint){
+    void saveInFile(int first_iteration, int act_time, double Xzmp, double setpoint)
+    {
         ofstream out;
-        if (first_iteration==0) {out.open("data.txt",ios::trunc);}    //The first time deletes previous content
-        else {out.open("data.txt",ios::app);}                   //The following times appends data to the file
+        if (first_iteration==0) {out.open("data.txt",ios::trunc);}  //The first time deletes previous content
+        else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
         out << act_time << " " << Xzmp << " " << setpoint << endl;
         out.close();
     }
 
-    int getMilliCount(){
-        timeb tb;
-        ftime(&tb);
-        int nCount = tb.millitm + (tb.time & 0xfffff) * 1000;
-        return nCount;
-    }
+//    void set(IVelocityControl *value, IVelocityControl *value0, PID *value1, BufferedPort<Bottle> *value2)
+//    {
+//        velRightLeg = value;
+//        velLeftLeg = value0;
+//        pidcontroller = value1;
+//        readPort = value2;
+//    }
 
-    int getMilliSpan(int nTimeStart){
-        int nSpan = getMilliCount() - nTimeStart;
-        if(nSpan < 0)
-            nSpan += 0x100000 * 1000;
-        return nSpan;
-    }
-
-    void setVels(IVelocityControl *value, IVelocityControl *value0)
+    void set(PID *value1, BufferedPort<Bottle> *value2)
     {
-        velRightLeg = value;
-        velLeftLeg = value0;
-    }
-
-    void setPid(PID *value)
-    {
-        pidcontroller = value;
-    }
-
-    void setPorts(BufferedPort<Bottle> *value)
-    {
-        readPort = value;
-    }
-
-    void setFirstValues()
-    {
-        first_iteration = 0;
+        pidcontroller = value1;
+        readPort = value2;
     }
 
 private:
-    BufferedPort<Bottle> *readPort;                                         //YARP port for reading from sensor
-    PID *pidcontroller;                                                     //PID controller
-    IVelocityControl *velRightLeg, *velLeftLeg;                             //Velocity controllers
+    BufferedPort<Bottle> *readPort;
+    PID *pidcontroller;
+//    IVelocityControl *velRightLeg, *velLeftLeg;
+
     int first_iteration;
+    int iteration;
+    double init_time, act_time, init_loop, act_loop, act_loop_avg, act_loop_acum;
+
     double Xzmp, Yzmp, actual_value, setpoint, pid_output;
-    double x, y, z, x_sensor, y_sensor, z_sensor, x_robot, y_robot, z_robot;
-    int init_time, act_time, init_loop, act_loop;
     double maxZMP, minZMP, ZMPerror;
+    double x, y, z, x_robot, y_robot, z_robot;
+    //double x_sensor, y_sensor, z_sensor;
+
+    deque<double> x_sensor, y_sensor, z_sensor;
 };
 
 #endif
