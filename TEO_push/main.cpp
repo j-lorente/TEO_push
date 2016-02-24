@@ -25,7 +25,7 @@ using namespace yarp::dev;
 #define Zcom 103.6602 //Distance to COM in Z axis [cm]
 
 //Low-pass Filter
-#define samples 5 //Number of samples for computing average
+#define samples 10 //Number of samples for computing average
 
 //PID parameters
 #define dt 0.05 //Loop interval time [assumtion: s]
