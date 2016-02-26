@@ -105,7 +105,6 @@ int main(int argc, char *argv[])
     //CONTROL LOOP
     MyRateThread myRateThread;
     myRateThread.set(velRightLeg, velLeftLeg, &pidcontroller, &readPort);
-//    myRateThread.set(&pidcontroller, &readPort);
     myRateThread.start();
 
     //WAIT FOR ENTER AND EXIT LOOP
