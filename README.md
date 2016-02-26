@@ -1,6 +1,8 @@
 # TEO_push
 Push-recovery experiments with humanoid robot TEO (UC3M)
 
+*Ankle Strategy*
+
 Instructions:
 
 	1. Terminal 1:	ssh 2.2.2.52 / ssh locomotion
@@ -13,4 +15,4 @@ Instructions:
 
 	5. Terminal 2:	launchLocomotion
 
-	6. Launch exe
+	6. Launch TEO_push
