@@ -126,7 +126,7 @@ public:
         return (maxZMP - minZMP)/2;
     }
 
-    void saveInFile()
+    void saveInFile() //Save relevant data in external file for posterior plotting
     {
         ofstream out;
         if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
