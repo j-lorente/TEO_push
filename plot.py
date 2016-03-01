@@ -15,20 +15,21 @@ data=np.loadtxt('build/data.txt')
 
 t = data[:,0]
 acc = data[:,1]
-acc_avg = data[:,2]
-setpoint = data[:,3]
-zmp = data[:,4]
+pid_ankle = data[:,2]
+pid_hip = data[:,3]
+setpoint = data[:,4]
+zmp = data[:,5]
 
 initial_x = t[0]
 final_x = t[len(data)-1]
 
 plt.subplot(211)
-plt.plot(t, acc, linestyle='-', color='r', label='IMU acceleration')
-plt.plot(t, acc_avg, linestyle='-', color='b', label='Acceleration average')
-plt.axis([initial_x, final_x, -5, 5])
-plt.title('Acceleration in X')
+plt.plot(t, acc, linestyle='-', color='r', label='Acceleration in X [m/s²]')
+plt.plot(t, pid_ankle, linestyle='-', color='b', label='Ankle PID output [deg/s]')
+plt.plot(t, pid_hip, linestyle='-', color='g', label='Hip PID output [deg/s]')
+plt.axis([initial_x, final_x, -11, 11])
+plt.title('PID output')
 plt.xlabel('s')
-plt.ylabel('m/s^2')
 plt.grid(True)
 plt.legend()
 

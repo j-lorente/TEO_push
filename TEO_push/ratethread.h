@@ -62,11 +62,17 @@ public:
 //        {
 //            setpoint = Xzmp; //Get initial position as setpoint [cm]
 //        }
-        pid_output = - pidcontroller->calculate(setpoint, actual_value);
+        pid_output_ankle = - pidcontroller_ankle->calculate(setpoint, actual_value);
+        pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-        //SEND MOTOR VELOCITY THROUGH YARP
-        velLeftLeg->velocityMove(4, pid_output);   //Motor number. Velocity [deg/s].
-        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
+        //ANKLE STRATEGY
+        velLeftLeg->velocityMove(4, pid_output_ankle);   //Motor number. Velocity [deg/s].
+        velRightLeg->velocityMove(4, pid_output_ankle);  //Motor number. Velocity [deg/s].
+
+        //HIP STRATEGY
+        velLeftLeg->velocityMove(4, pid_output_ankle);   //Motor number. Velocity [deg/s].
+        velRightLeg->velocityMove(4, pid_output_ankle);  //Motor number. Velocity [deg/s].
+        velTrunk->velocityMove(1, pid_output_hip);       //Motor number. Velocity [deg/s].
 
         saveInFile(); //Save data in external file
 
@@ -103,7 +109,7 @@ public:
         cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
         //cout << "ZMP(x) error = +/- " << ZMPerror << " cm" << endl;
         cout << "Setpoint = " << setpoint << endl;
-        cout << "PID output = " << pid_output << endl << endl;
+        cout << "PID output = " << pid_output_ankle << endl << endl;
         cout << "Loop time: " << act_loop << " ms" << endl;
         cout << "Absolute time: " << int(act_time) << " s" << endl;
     }
@@ -131,26 +137,30 @@ public:
         ofstream out;
         if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
         else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
-        out << act_time << " " << x_acc << " " << x << " " << setpoint << " " << Xzmp << endl;
+        out << act_time << " " << x << " " << pid_output_ankle << " " << pid_output_hip << " ";
+        out << setpoint << " " << Xzmp << endl;
         out.close();
     }
 
-    void set(IVelocityControl *value, IVelocityControl *value0, PID *value1, BufferedPort<Bottle> *value2)
+    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
+             PID *value2, PID *value3, BufferedPort<Bottle> *value4)
     {
         velRightLeg = value;
         velLeftLeg = value0;
-        pidcontroller = value1;
-        readPort = value2;
+        velTrunk = value1;
+        pidcontroller_ankle = value2;
+        pidcontroller_hip = value3;
+        readPort = value4;
     }
 
 private:
     BufferedPort<Bottle> *readPort;
-    PID *pidcontroller;
-    IVelocityControl *velRightLeg, *velLeftLeg;
+    PID *pidcontroller_ankle, *pidcontroller_hip;
+    IVelocityControl *velRightLeg, *velLeftLeg, *velTrunk;
 
     int iteration;
     double init_time, act_time, init_loop, act_loop;
-    double Xzmp, Yzmp, actual_value, pid_output;
+    double Xzmp, Yzmp, actual_value, pid_output_ankle, pid_output_hip;
     //double setpoint;
     double maxZMP, minZMP, ZMPerror;
     double x, y, z, x_robot, y_robot, z_robot;
