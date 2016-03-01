@@ -24,7 +24,7 @@ using namespace yarp::dev;
 #define Zcom 103.6602 //Distance to COM in Z axis [cm]
 
 //Low-pass Filter
-#define samples 100 //Number of samples for computing average
+#define samples 30 //Number of samples for computing average
 
 //PID parameters
 #define dt 0.05 //Loop interval time [assumtion: s]
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 {
 
     //CONSTRUCT PID CONTROLLER
-    PID pidcontroller(dt, max, min, Kp, Kd, Ki); //P?PI?PD?
+    PID pidcontroller(dt, max, min, Kp, Kd, Ki);
 
     //INITIALISE AND CHECK YARP
     Network yarp;
