@@ -9,11 +9,12 @@ public:
         y_sensor.resize(samples);
         z_sensor.resize(samples);
         iteration = 1;
+        strategy = 0;
     }
 
     void run()
     {
-        getInitialTime();
+        //getInitialTime();
 
         //READ SENSOR
         Bottle *input = readPort->read();
@@ -21,7 +22,7 @@ public:
         {
              printf("[error] No data from sensor...\n");
              return;
-         }
+        }
         x_acc = input->get(3).asDouble();
         x_sensor.push_front(x_acc); //Linear acceleration in X [m/s^2]
         x_sensor.pop_back();
@@ -29,6 +30,7 @@ public:
         y_sensor.pop_back();
         z_sensor.push_front(input->get(5).asDouble()); //Linear acceleration in Z [m/s^2]
         z_sensor.pop_back();
+        ang_spd = input->get(5).asDouble(); //Angular speed in X [deg/s]
 
          //LOW-PASS FILTER
          x = 0.0;
@@ -53,10 +55,10 @@ public:
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
-        //CALCULATE ZMP ERROR
-        ZMPerror = getError();
+//        //CALCULATE ZMP ERROR
+//        ZMPerror = getError();
 
-        //PID
+//        //PID
         actual_value = Xzmp;
 //        if (iteration==1)
 //        {
@@ -65,92 +67,116 @@ public:
         pid_output_ankle = - pidcontroller_ankle->calculate(setpoint, actual_value);
         pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-        //ANKLE STRATEGY
-        velLeftLeg->velocityMove(4, pid_output_ankle);   //Motor number. Velocity [deg/s].
-        velRightLeg->velocityMove(4, pid_output_ankle);  //Motor number. Velocity [deg/s].
+        //ELECTION OF STRATEGY
+        ang_spd = ang_spd * pi / 180; //Conversion of angular speed from deg/s to rad/s
+        lin_vel = ( x_sensor.at(0) + x_sensor.at(1) ) * dt;
+        capture_point = (lin_vel / ang_spd) + (Xzmp / 100);
+        cout << "Linear velocity: " << lin_vel << " m/s" << endl;
+        cout << "Angular speed: " << ang_spd << " rad/s" << endl;
+        cout << "Xcom: " << Xzmp/100 << " m" << endl;
+        cout << "Capture point: " << capture_point << " m" << endl;
+        if (capture_point <= 0.12 && capture_point >= -0.12 ) {cout << "ANKLE STRATEGY" << endl;}
+        else {cout << "HIP STRATEGY" << endl;}
 
-        //HIP STRATEGY
-        velLeftLeg->velocityMove(4, pid_output_ankle);   //Motor number. Velocity [deg/s].
-        velRightLeg->velocityMove(4, pid_output_ankle);  //Motor number. Velocity [deg/s].
-        velTrunk->velocityMove(1, pid_output_hip);       //Motor number. Velocity [deg/s].
+//        //JOINTS CONTROL
+//        if (strategy == 0) //Ankle strategy
+//        {
+//            velLeftLeg->velocityMove(4, pid_output_ankle);   //Motor number. Velocity [deg/s].
+//            velRightLeg->velocityMove(4, pid_output_ankle);  //Motor number. Velocity [deg/s].
+//        }
+//        else //Hip strategy
+//        {
+//            velLeftLeg->velocityMove(4, pid_output_ankle);   //Motor number. Velocity [deg/s].
+//            velRightLeg->velocityMove(4, pid_output_ankle);  //Motor number. Velocity [deg/s].
+//            velTrunk->velocityMove(1, pid_output_hip);       //Motor number. Velocity [deg/s].
+//        }
 
-        saveInFile(); //Save data in external file
+        //saveInFile(); //Save data in external file
 
-        getCurrentTime();
+        //getCurrentTime();
 
-        printData(); //Save relevant data in external file for posterior plotting
+        //printData(); //Save relevant data in external file for posterior plotting
 
         cout << endl << "Press ENTER to exit..." << endl;
         cout << "*******************************" << endl << endl;
 
+        Time::delay(1);
+
         iteration++;
     }
 
-    void getInitialTime()
-    {
-        if (iteration==1)
-        {
-            init_time = Time::now();
-        }
-        init_loop = Time::now();
-    }
+//    void getInitialTime()
+//    {
+//        if (iteration==1)
+//        {
+//            init_time = Time::now();
+//        }
+//        init_loop = Time::now();
+//    }
 
-    void getCurrentTime()
-    {
-        act_time = Time::now() - init_time;
-        act_loop = Time::now() - init_loop;
-    }
+//    void getCurrentTime()
+//    {
+//        act_time = Time::now() - init_time;
+//        act_loop = Time::now() - init_loop;
+//    }
 
-    void printData()
-    {
-        cout << "Acceleration in X = " << x_robot << " m/s^2" << endl;
-        cout << "Acceleration in Y = " << y_robot << " m/s^2" << endl;
-        cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
-        cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
-        //cout << "ZMP(x) error = +/- " << ZMPerror << " cm" << endl;
-        cout << "Setpoint = " << setpoint << endl;
-        cout << "PID output = " << pid_output_ankle << endl << endl;
-        cout << "Loop time: " << act_loop << " ms" << endl;
-        cout << "Absolute time: " << int(act_time) << " s" << endl;
-    }
+//    void printData()
+//    {
+//        cout << "Acceleration in X = " << x_robot << " m/s^2" << endl;
+//        cout << "Acceleration in Y = " << y_robot << " m/s^2" << endl;
+//        cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
+//        cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
+//        //cout << "ZMP(x) error = +/- " << ZMPerror << " cm" << endl;
+//        cout << "Setpoint = " << setpoint << endl;
+//        cout << "PID output = " << pid_output_ankle << endl << endl;
+//        cout << "Loop time: " << act_loop << " ms" << endl;
+//        cout << "Absolute time: " << int(act_time) << " s" << endl;
+//    }
 
-    double getError()
-    {
-        if (iteration==1)
-        {
-            maxZMP = Xzmp;
-            minZMP = Xzmp;
-        }
-        if (Xzmp > maxZMP)
-        {
-            maxZMP = Xzmp;
-        }
-        if (Xzmp < minZMP)
-        {
-            minZMP = Xzmp;
-        }
-        return (maxZMP - minZMP)/2;
-    }
+//    double getError()
+//    {
+//        if (iteration==1)
+//        {
+//            maxZMP = Xzmp;
+//            minZMP = Xzmp;
+//        }
+//        if (Xzmp > maxZMP)
+//        {
+//            maxZMP = Xzmp;
+//        }
+//        if (Xzmp < minZMP)
+//        {
+//            minZMP = Xzmp;
+//        }
+//        return (maxZMP - minZMP)/2;
+//    }
 
-    void saveInFile()
-    {
-        ofstream out;
-        if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
-        else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
-        out << act_time << " " << x << " " << pid_output_ankle << " " << pid_output_hip << " ";
-        out << setpoint << " " << Xzmp << endl;
-        out.close();
-    }
+//    void saveInFile()
+//    {
+//        ofstream out;
+//        if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
+//        else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
+//        out << act_time << " " << x << " " << pid_output_ankle << " " << pid_output_hip << " ";
+//        out << setpoint << " " << Xzmp << endl;
+//        out.close();
+//    }
 
-    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
-             PID *value2, PID *value3, BufferedPort<Bottle> *value4)
+//    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
+//             PID *value2, PID *value3, BufferedPort<Bottle> *value4)
+//    {
+//        velRightLeg = value;
+//        velLeftLeg = value0;
+//        velTrunk = value1;
+//        pidcontroller_ankle = value2;
+//        pidcontroller_hip = value3;
+//        readPort = value4;
+//    }
+
+    void set(PID *value, PID *value0, BufferedPort<Bottle> *value1)
     {
-        velRightLeg = value;
-        velLeftLeg = value0;
-        velTrunk = value1;
-        pidcontroller_ankle = value2;
-        pidcontroller_hip = value3;
-        readPort = value4;
+        pidcontroller_ankle = value;
+        pidcontroller_hip = value0;
+        readPort = value1;
     }
 
 private:
@@ -158,16 +184,16 @@ private:
     PID *pidcontroller_ankle, *pidcontroller_hip;
     IVelocityControl *velRightLeg, *velLeftLeg, *velTrunk;
 
-    int iteration;
+    int iteration, strategy;
+    double capture_point;
+    double x, y, z, x_robot, y_robot, z_robot, x_acc;
     double init_time, act_time, init_loop, act_loop;
     double Xzmp, Yzmp, actual_value, pid_output_ankle, pid_output_hip;
-    //double setpoint;
+     //double setpoint;
     double maxZMP, minZMP, ZMPerror;
-    double x, y, z, x_robot, y_robot, z_robot;
-    double x_acc;
+    double lin_vel, ang_spd;
 
     deque<double> x_sensor, y_sensor, z_sensor;
-    deque<double> loop_time;
 };
 
 #endif
