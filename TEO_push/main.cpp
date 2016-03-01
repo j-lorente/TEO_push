@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(10);  //Wait for port to open [s]
+    Time::delay(1);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
