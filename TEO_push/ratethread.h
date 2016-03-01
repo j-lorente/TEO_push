@@ -30,7 +30,7 @@ public:
         z_sensor.push_front(input->get(5).asDouble()); //Linear acceleration in Z [m/s^2]
         z_sensor.pop_back();
 
-         //LOW-PASS FILTER (Average)
+         //LOW-PASS FILTER
          x = 0.0;
          y = 0.0;
          z = 0.0;
@@ -68,7 +68,7 @@ public:
         velLeftLeg->velocityMove(4, pid_output);   //Motor number. Velocity [deg/s].
         velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
 
-        saveInFile(); //Save data in external file
+        saveInFile();  //Save relevant data in external file for posterior plotting
 
         getCurrentTime();
 
@@ -126,7 +126,7 @@ public:
         return (maxZMP - minZMP)/2;
     }
 
-    void saveInFile() //Save relevant data in external file for posterior plotting
+    void saveInFile()
     {
         ofstream out;
         if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
@@ -154,11 +154,10 @@ private:
     //double setpoint;
     double maxZMP, minZMP, ZMPerror;
     double x, y, z, x_robot, y_robot, z_robot;
+    double x_acc;
 
     deque<double> x_sensor, y_sensor, z_sensor;
     deque<double> loop_time;
-
-    double x_acc;
 };
 
 #endif
