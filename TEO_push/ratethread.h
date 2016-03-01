@@ -157,7 +157,6 @@ private:
     double x_acc;
 
     deque<double> x_sensor, y_sensor, z_sensor;
-    deque<double> loop_time;
 };
 
 #endif

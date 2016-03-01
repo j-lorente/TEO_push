@@ -27,7 +27,7 @@ using namespace yarp::dev;
 #define samples 30 //Number of samples for computing average
 
 //PID parameters
-#define dt 0.05 //Loop interval time [assumtion: s]
+#define dt 0.05 //Loop interval time [assumption: s]
 #define max 10 //Maximum output value
 #define min -10 //Minimum output value
 #define Kp 0.1 //Proportional gain
