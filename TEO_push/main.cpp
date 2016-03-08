@@ -6,7 +6,7 @@
 
 //#include <stdio.h>
 //#include <stdlib.h>
-//#include <math.h>
+#include <math.h>
 #include <yarp/os/all.h>
 #include <yarp/dev/all.h>
 #include <fstream>
@@ -18,7 +18,9 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+//General constants
 #define pi 3.14159265358979323846
+#define g 9.81
 
 //Origin of coordinates established in the middle point between the feet
 #define Xcom 0 //Distance to COM in X axis [cm]
@@ -29,7 +31,7 @@ using namespace yarp::dev;
 #define samples 30 //Number of samples for computing average
 
 //Ankle PID parameters
-#define dt 0.05 //Loop interval time [assumtion: s]
+#define dt 0.05 //Loop interval time [assumption: s]
 #define max 10 //Maximum output value
 #define min -10 //Minimum output value
 #define setpoint 0 //Desired value [cm]

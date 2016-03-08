@@ -9,12 +9,11 @@ public:
         y_sensor.resize(samples);
         z_sensor.resize(samples);
         iteration = 1;
-        strategy = 0;
     }
 
     void run()
     {
-        //getInitialTime();
+        getInitialTime();
 
         //READ SENSOR
         Bottle *input = readPort->read();
@@ -30,7 +29,6 @@ public:
         y_sensor.pop_back();
         z_sensor.push_front(input->get(5).asDouble()); //Linear acceleration in Z [m/s^2]
         z_sensor.pop_back();
-        ang_spd = input->get(5).asDouble(); //Angular speed in X [deg/s]
 
          //LOW-PASS FILTER
          x = 0.0;
@@ -58,6 +56,20 @@ public:
 //        //CALCULATE ZMP ERROR
 //        ZMPerror = getError();
 
+        //DETERMINING STRATEGY
+        //lin_vel = (x_sensor.at(0) - x_sensor.at(1)) * dt;
+        lin_vel = x_sensor.at(0) * dt;
+        w = sqrt(g / (Zcom / 100));
+        capture_point = (lin_vel / w) + (Xzmp / 100);
+        cout << "Linear velocity: " << lin_vel << " m/s" << endl;
+        cout << "g: " << g << " m/s²" << endl;
+        cout << "Zcom: " << Zcom/100 << " m" << endl;
+        cout << "w: " << w << " rad/s" << endl;
+        cout << "Xcom: " << Xzmp/100 << " m" << endl;
+        cout << "Capture point: " << capture_point << " m" << endl;
+        if (capture_point < 0.12 && capture_point > -0.12) {cout << "ANKLE STRATEGY" << endl;}
+        else {cout << "HIP STRATEGY" << endl;}
+
 //        //PID
         actual_value = Xzmp;
 //        if (iteration==1)
@@ -67,19 +79,14 @@ public:
         pid_output_ankle = - pidcontroller_ankle->calculate(setpoint, actual_value);
         pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-        //ELECTION OF STRATEGY
-        ang_spd = ang_spd * pi / 180; //Conversion of angular speed from deg/s to rad/s
-        lin_vel = ( x_sensor.at(0) + x_sensor.at(1) ) * dt;
-        capture_point = (lin_vel / ang_spd) + (Xzmp / 100);
-        cout << "Linear velocity: " << lin_vel << " m/s" << endl;
-        cout << "Angular speed: " << ang_spd << " rad/s" << endl;
-        cout << "Xcom: " << Xzmp/100 << " m" << endl;
-        cout << "Capture point: " << capture_point << " m" << endl;
-        if (capture_point <= 0.12 && capture_point >= -0.12 ) {cout << "ANKLE STRATEGY" << endl;}
-        else {cout << "HIP STRATEGY" << endl;}
+        // [PRUEBA DE ACELERACIONES]
+//        double acc_max = (g / (Zcom / 100)) * (0.12);
+//        cout << "acc_max: " << acc_max << " m/s²" << endl;
+//        if (x_robot < acc_max && x_robot > -acc_max) {cout << "ANKLE STRATEGY" << endl;}
+//        else {cout << "HIP STRATEGY" << endl;}
 
-//        //JOINTS CONTROL
-//        if (strategy == 0) //Ankle strategy
+        //JOINTS CONTROL
+//        if () //Ankle strategy
 //        {
 //            velLeftLeg->velocityMove(4, pid_output_ankle);   //Motor number. Velocity [deg/s].
 //            velRightLeg->velocityMove(4, pid_output_ankle);  //Motor number. Velocity [deg/s].
@@ -91,34 +98,32 @@ public:
 //            velTrunk->velocityMove(1, pid_output_hip);       //Motor number. Velocity [deg/s].
 //        }
 
-        //saveInFile(); //Save data in external file
+        saveInFile(); //Save data in external file
 
-        //getCurrentTime();
+        getCurrentTime();
 
         //printData(); //Save relevant data in external file for posterior plotting
 
         cout << endl << "Press ENTER to exit..." << endl;
         cout << "*******************************" << endl << endl;
 
-        Time::delay(1);
-
         iteration++;
     }
 
-//    void getInitialTime()
-//    {
-//        if (iteration==1)
-//        {
-//            init_time = Time::now();
-//        }
-//        init_loop = Time::now();
-//    }
+    void getInitialTime()
+    {
+        if (iteration==1)
+        {
+            init_time = Time::now();
+        }
+        init_loop = Time::now();
+    }
 
-//    void getCurrentTime()
-//    {
-//        act_time = Time::now() - init_time;
-//        act_loop = Time::now() - init_loop;
-//    }
+    void getCurrentTime()
+    {
+        act_time = Time::now() - init_time;
+        act_loop = Time::now() - init_loop;
+    }
 
 //    void printData()
 //    {
@@ -148,18 +153,24 @@ public:
 //        {
 //            minZMP = Xzmp;
 //        }
-//        return (maxZMP - minZMP)/2;
+//        return (maxZMP - minZMP)/2;               3.0763
 //    }
 
-//    void saveInFile()
-//    {
-//        ofstream out;
-//        if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
-//        else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
-//        out << act_time << " " << x << " " << pid_output_ankle << " " << pid_output_hip << " ";
-//        out << setpoint << " " << Xzmp << endl;
-//        out.close();
-//    }
+    void saveInFile()
+    {
+        ofstream out;
+        if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
+        else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
+        //out << act_time << " " << x << " " << pid_output_ankle << " " << pid_output_hip << " ";
+        //out << setpoint << " " << Xzmp << endl;
+        out << act_time << " " << x_sensor.at(0) << " " << x << " ";
+        if (capture_point < 0.12 && capture_point > -0.12)
+            out << 0 << " ";
+        else
+            out << 1 << " ";
+        out << lin_vel << " " << g << " " << Zcom/100 << " " << Xzmp/100 << " " << capture_point << endl;
+        out.close();
+    }
 
 //    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
 //             PID *value2, PID *value3, BufferedPort<Bottle> *value4)
@@ -184,14 +195,14 @@ private:
     PID *pidcontroller_ankle, *pidcontroller_hip;
     IVelocityControl *velRightLeg, *velLeftLeg, *velTrunk;
 
-    int iteration, strategy;
+    int iteration;
     double capture_point;
     double x, y, z, x_robot, y_robot, z_robot, x_acc;
     double init_time, act_time, init_loop, act_loop;
     double Xzmp, Yzmp, actual_value, pid_output_ankle, pid_output_hip;
      //double setpoint;
     double maxZMP, minZMP, ZMPerror;
-    double lin_vel, ang_spd;
+    double lin_vel, w;
 
     deque<double> x_sensor, y_sensor, z_sensor;
 };
