@@ -22,10 +22,10 @@ public:
              printf("[error] No data from sensor...\n");
              return;
          }
-        x_acc = input->get(3).asDouble();
-        x_sensor.push_front(x_acc); //Linear acceleration in X [m/s^2]
+        x_sensor.push_front(input->get(3).asDouble()); //Linear acceleration in X [m/s^2]
         x_sensor.pop_back();
-        y_sensor.push_front(input->get(4).asDouble()); //Linear acceleration in Y [m/s^2]
+        y_acc = input->get(4).asDouble();
+        y_sensor.push_front(y_acc); //Linear acceleration in Y [m/s^2]
         y_sensor.pop_back();
         z_sensor.push_front(input->get(5).asDouble()); //Linear acceleration in Z [m/s^2]
         z_sensor.pop_back();
@@ -54,19 +54,19 @@ public:
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
         //CALCULATE ZMP ERROR
-        ZMPerror = getError();
+        //ZMPerror = getError();
 
         //PID
-        actual_value = Xzmp;
+        actual_value = Yzmp;
 //        if (iteration==1)
 //        {
-//            setpoint = Xzmp; //Get initial position as setpoint [cm]
+//            setpoint = Yzmp; //Get initial position as setpoint [cm]
 //        }
-        pid_output = - pidcontroller->calculate(setpoint, actual_value);
+        pid_output = - pidcontroller->calculate(setpoint, actual_value); //?????????????????????????????
 
         //SEND MOTOR VELOCITY THROUGH YARP
-        velLeftLeg->velocityMove(4, pid_output);   //Motor number. Velocity [deg/s].
-        velRightLeg->velocityMove(4, pid_output);  //Motor number. Velocity [deg/s].
+//        velLeftLeg->velocityMove(5, pid_output);   //Motor number. Velocity [deg/s].
+//        velRightLeg->velocityMove(5, pid_output);  //Motor number. Velocity [deg/s].
 
         saveInFile();  //Save relevant data in external file for posterior plotting
 
@@ -101,7 +101,7 @@ public:
         cout << "Acceleration in Y = " << y_robot << " m/s^2" << endl;
         cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
         cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
-        //cout << "ZMP(x) error = +/- " << ZMPerror << " cm" << endl;
+        //cout << "ZMP(y) error = +/- " << ZMPerror << " cm" << endl;
         cout << "Setpoint = " << setpoint << endl;
         cout << "PID output = " << pid_output << endl << endl;
         cout << "Loop time: " << act_loop << " ms" << endl;
@@ -112,16 +112,16 @@ public:
     {
         if (iteration==1)
         {
-            maxZMP = Xzmp;
-            minZMP = Xzmp;
+            maxZMP = Yzmp;
+            minZMP = Yzmp;
         }
-        if (Xzmp > maxZMP)
+        if (Yzmp > maxZMP)
         {
-            maxZMP = Xzmp;
+            maxZMP = Yzmp;
         }
-        if (Xzmp < minZMP)
+        if (Yzmp < minZMP)
         {
-            minZMP = Xzmp;
+            minZMP = Yzmp;
         }
         return (maxZMP - minZMP)/2;
     }
@@ -131,7 +131,7 @@ public:
         ofstream out;
         if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
         else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
-        out << act_time << " " << x_acc << " " << x << " " << setpoint << " " << Xzmp << endl;
+        out << act_time << " " << y_acc << " " << y << " " << setpoint << " " << Yzmp << endl;
         out.close();
     }
 
@@ -154,7 +154,7 @@ private:
     //double setpoint;
     double maxZMP, minZMP, ZMPerror;
     double x, y, z, x_robot, y_robot, z_robot;
-    double x_acc;
+    double y_acc;
 
     deque<double> x_sensor, y_sensor, z_sensor;
 };
