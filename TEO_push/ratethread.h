@@ -53,9 +53,6 @@ public:
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
-        //CALCULATE ZMP ERROR
-        //ZMPerror = getError();
-
         //PID
         actual_value = Yzmp;
 //        if (iteration==1)
@@ -65,8 +62,10 @@ public:
         pid_output = pidcontroller->calculate(setpoint, actual_value); //?????????????????????????????
 
         //SEND MOTOR VELOCITY THROUGH YARP
-        velLeftLeg->velocityMove(5, pid_output);   //Motor number. Velocity [deg/s].
-        velRightLeg->velocityMove(5, -pid_output);  //Motor number. Velocity [deg/s].
+        if (Yzmp < 0)
+            velRightLeg->velocityMove(5, pid_output);
+        else if (Yzmp > 0)
+            velLeftLeg->velocityMove(5, pid_output);
 
         saveInFile();  //Save relevant data in external file for posterior plotting
 
@@ -101,29 +100,10 @@ public:
         cout << "Acceleration in Y = " << y_robot << " m/s^2" << endl;
         cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
         cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
-        //cout << "ZMP(y) error = +/- " << ZMPerror << " cm" << endl;
         cout << "Setpoint = " << setpoint << endl;
         cout << "PID output = " << pid_output << endl << endl;
         cout << "Loop time: " << act_loop << " ms" << endl;
         cout << "Absolute time: " << int(act_time) << " s" << endl;
-    }
-
-    double getError()
-    {
-        if (iteration==1)
-        {
-            maxZMP = Yzmp;
-            minZMP = Yzmp;
-        }
-        if (Yzmp > maxZMP)
-        {
-            maxZMP = Yzmp;
-        }
-        if (Yzmp < minZMP)
-        {
-            minZMP = Yzmp;
-        }
-        return (maxZMP - minZMP)/2;
     }
 
     void saveInFile()
@@ -152,7 +132,6 @@ private:
     double init_time, act_time, init_loop, act_loop;
     double Xzmp, Yzmp, actual_value, pid_output;
     //double setpoint;
-    double maxZMP, minZMP, ZMPerror;
     double x, y, z, x_robot, y_robot, z_robot;
     double y_acc;
 
