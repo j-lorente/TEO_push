@@ -62,11 +62,11 @@ public:
 //        {
 //            setpoint = Yzmp; //Get initial position as setpoint [cm]
 //        }
-        pid_output = - pidcontroller->calculate(setpoint, actual_value); //?????????????????????????????
+        pid_output = pidcontroller->calculate(setpoint, actual_value); //?????????????????????????????
 
         //SEND MOTOR VELOCITY THROUGH YARP
-//        velLeftLeg->velocityMove(5, pid_output);   //Motor number. Velocity [deg/s].
-//        velRightLeg->velocityMove(5, pid_output);  //Motor number. Velocity [deg/s].
+        velLeftLeg->velocityMove(5, pid_output);   //Motor number. Velocity [deg/s].
+        velRightLeg->velocityMove(5, -pid_output);  //Motor number. Velocity [deg/s].
 
         saveInFile();  //Save relevant data in external file for posterior plotting
 
