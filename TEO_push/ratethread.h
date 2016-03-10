@@ -55,17 +55,18 @@ public:
 
         //PID
         actual_value = Yzmp;
-//        if (iteration==1)
-//        {
-//            setpoint = Yzmp; //Get initial position as setpoint [cm]
-//        }
-        pid_output = pidcontroller->calculate(setpoint, actual_value); //?????????????????????????????
+        if (iteration==1)
+        {
+            setpoint = Yzmp; //Get initial position as setpoint [cm]
+        }
+        pid_output = pidcontroller->calculate(setpoint, actual_value);
 
         //SEND MOTOR VELOCITY THROUGH YARP
-        if (Yzmp < 0)
-            velRightLeg->velocityMove(5, pid_output);
-        else if (Yzmp > 0)
-            velLeftLeg->velocityMove(5, pid_output);
+        velRightLeg->velocityMove(5, -pid_output); //Right Leg - Waist
+        velRightLeg->velocityMove(1, pid_output); //Right Leg - Ankle
+
+        velLeftLeg->velocityMove(5, pid_output); //Left Leg - Waist
+        velLeftLeg->velocityMove(1, -pid_output); //Left Leg - Ankle
 
         saveInFile();  //Save relevant data in external file for posterior plotting
 
@@ -131,7 +132,7 @@ private:
     int iteration;
     double init_time, act_time, init_loop, act_loop;
     double Xzmp, Yzmp, actual_value, pid_output;
-    //double setpoint;
+    double setpoint;
     double x, y, z, x_robot, y_robot, z_robot;
     double y_acc;
 
