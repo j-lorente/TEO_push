@@ -73,19 +73,19 @@ int main(int argc, char *argv[])
     Network::connect("/inertial", "/inertial:i");
     Time::delay(0.5);  //Wait for ports connect [s]
 
-//    //CONNECT TO ROBOT LEFT LEG
-//    Property optionsLeftLeg;                                //YARP class for storing name-value (key-value) pairs
-//    optionsLeftLeg.put("device","remote_controlboard");     //YARP device
-//    optionsLeftLeg.put("remote","/teo/leftLeg");            //To what will be connected
-//    optionsLeftLeg.put("local","/juan/leftLeg");            //How will be called on YARP network
-//    PolyDriver deviceLeftLeg(optionsLeftLeg);               //YARP multi-use driver with the given options
-//    if(!deviceLeftLeg.isValid())
-//    {
-//      printf("[error] /teo/leftLeg device not available.\n");
-//      deviceLeftLeg.close();
-//      Network::fini();
-//      return 1;
-//    }
+    //CONNECT TO ROBOT LEFT LEG
+    Property optionsLeftLeg;                                //YARP class for storing name-value (key-value) pairs
+    optionsLeftLeg.put("device","remote_controlboard");     //YARP device
+    optionsLeftLeg.put("remote","/teo/leftLeg");            //To what will be connected
+    optionsLeftLeg.put("local","/juan/leftLeg");            //How will be called on YARP network
+    PolyDriver deviceLeftLeg(optionsLeftLeg);               //YARP multi-use driver with the given options
+    if(!deviceLeftLeg.isValid())
+    {
+      printf("[error] /teo/leftLeg device not available.\n");
+      deviceLeftLeg.close();
+      Network::fini();
+      return 1;
+    }
 //    IVelocityControl *velLeftLeg;                 //Velocity controller
 //    if ( ! deviceLeftLeg.view(velLeftLeg) )
 //    {
@@ -93,20 +93,27 @@ int main(int argc, char *argv[])
 //        return false;
 //    } else printf("[success] TEO_push acquired robot left leg IVelocityControl interface.\n");
 //    velLeftLeg->setVelocityMode();
+    IPositionControl *posLeftLeg;
+    if ( ! deviceLeftLeg.view(posLeftLeg) )
+    {
+        printf("[error] Problems acquiring robot left leg IPositionControl interface.\n");
+        return false;
+    } else printf("[success] TEO_push acquired robot left leg IPositionControl interface.\n");
+    posLeftLeg->setPositionMode();
 
-//    //CONNECT TO ROBOT RIGHT LEG
-//    Property optionsRightLeg;                                 //YARP class for storing name-value (key-value) pairs
-//    optionsRightLeg.put("device","remote_controlboard");      //YARP device
-//    optionsRightLeg.put("remote","/teo/rightLeg");            //To what will be connected
-//    optionsRightLeg.put("local","/juan/rightLeg");            //How will be called on YARP network
-//    PolyDriver deviceRightLeg(optionsRightLeg);               //YARP multi-use driver with the given options
-//    if(!deviceRightLeg.isValid())
-//    {
-//      printf("[error] /teo/rightLeg device not available.\n");
-//      deviceRightLeg.close();
-//      Network::fini();
-//      return 1;
-//    }
+    //CONNECT TO ROBOT RIGHT LEG
+    Property optionsRightLeg;                                 //YARP class for storing name-value (key-value) pairs
+    optionsRightLeg.put("device","remote_controlboard");      //YARP device
+    optionsRightLeg.put("remote","/teo/rightLeg");            //To what will be connected
+    optionsRightLeg.put("local","/juan/rightLeg");            //How will be called on YARP network
+    PolyDriver deviceRightLeg(optionsRightLeg);               //YARP multi-use driver with the given options
+    if(!deviceRightLeg.isValid())
+    {
+      printf("[error] /teo/rightLeg device not available.\n");
+      deviceRightLeg.close();
+      Network::fini();
+      return 1;
+    }
 //    IVelocityControl *velRightLeg;                 //Velocity controller
 //    if ( ! deviceRightLeg.view(velRightLeg) )
 //    {
@@ -114,32 +121,39 @@ int main(int argc, char *argv[])
 //        return false;
 //    } else printf("[success] TEO_push acquired robot right leg IVelocityControl interface.\n");
 //    velRightLeg->setVelocityMode();
+    IPositionControl *posRightLeg;
+    if ( ! deviceRightLeg.view(posRightLeg) )
+    {
+        printf("[error] Problems acquiring robot right leg IPositionControl interface.\n");
+        return false;
+    } else printf("[success] TEO_push acquired robot right leg IPositionControl interface.\n");
+    posRightLeg->setPositionMode();
 
-//    //CONNECT TO ROBOT TRUNK
-//    Property optionsTrunk;                                    //YARP class for storing name-value (key-value) pairs
-//    optionsTrunk.put("device","remote_controlboard");         //YARP device
-//    optionsTrunk.put("remote","/teo/trunk");                  //To what will be connected
-//    optionsTrunk.put("local","/juan/trunk");                  //How will be called on YARP network
-//    PolyDriver deviceTrunk(optionsTrunk);                     //YARP multi-use driver with the given options
-//    if(!deviceTrunk.isValid())
-//    {
-//      printf("[error] /teo/trunk device not available.\n");
-//      deviceTrunk.close();
-//      Network::fini();
-//      return 1;
-//    }
-//    IVelocityControl *velTrunk;                 //Velocity controller
-//    if ( ! deviceTrunk.view(velTrunk) )
-//    {
-//       printf("[error] Problems acquiring robot trunk IVelocityControl interface.\n");
-//       return false;
-//    } else printf("[success] TEO_push acquired robot trunk IVelocityControl interface.\n");
-//    velTrunk->setVelocityMode();
+    //CONNECT TO ROBOT TRUNK
+    Property optionsTrunk;                                    //YARP class for storing name-value (key-value) pairs
+    optionsTrunk.put("device","remote_controlboard");         //YARP device
+    optionsTrunk.put("remote","/teo/trunk");                  //To what will be connected
+    optionsTrunk.put("local","/juan/trunk");                  //How will be called on YARP network
+    PolyDriver deviceTrunk(optionsTrunk);                     //YARP multi-use driver with the given options
+    if(!deviceTrunk.isValid())
+    {
+      printf("[error] /teo/trunk device not available.\n");
+      deviceTrunk.close();
+      Network::fini();
+      return 1;
+    }
+    IVelocityControl *velTrunk;                 //Velocity controller
+    if ( ! deviceTrunk.view(velTrunk) )
+    {
+       printf("[error] Problems acquiring robot trunk IVelocityControl interface.\n");
+       return false;
+    } else printf("[success] TEO_push acquired robot trunk IVelocityControl interface.\n");
+    velTrunk->setVelocityMode();
 
     //CONTROL LOOP
     MyRateThread myRateThread;
     //myRateThread.set(velRightLeg, velLeftLeg, velTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
-    myRateThread.set(&pidcontroller_ankle, &pidcontroller_hip, &readPort);
+    myRateThread.set(posRightLeg, posLeftLeg, velTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
     myRateThread.start();
 
     //WAIT FOR ENTER AND EXIT LOOP
@@ -151,10 +165,10 @@ int main(int argc, char *argv[])
     Time::delay(0.5);  //Wait for thread to stop [s]
 
     //CLOSE PORTS AND DEVICES
-//    deviceRightLeg.close();
-//    deviceLeftLeg.close();
-//    deviceTrunk.close();
-//    readPort.close();
+    deviceRightLeg.close();
+    deviceLeftLeg.close();
+    deviceTrunk.close();
+    readPort.close();
 
     return 0;
 }
