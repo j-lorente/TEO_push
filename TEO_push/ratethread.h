@@ -101,29 +101,10 @@ public:
         cout << "Acceleration in Y = " << y_robot << " m/s^2" << endl;
         cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
         cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
-        //cout << "ZMP(x) error = +/- " << ZMPerror << " cm" << endl;
         cout << "Setpoint = " << setpoint << endl;
         cout << "PID output = " << pid_output << endl << endl;
         cout << "Loop time: " << act_loop << " ms" << endl;
         cout << "Absolute time: " << int(act_time) << " s" << endl;
-    }
-
-    double getError()
-    {
-        if (iteration==1)
-        {
-            maxZMP = Xzmp;
-            minZMP = Xzmp;
-        }
-        if (Xzmp > maxZMP)
-        {
-            maxZMP = Xzmp;
-        }
-        if (Xzmp < minZMP)
-        {
-            minZMP = Xzmp;
-        }
-        return (maxZMP - minZMP)/2;
     }
 
     void saveInFile()
@@ -152,7 +133,6 @@ private:
     double init_time, act_time, init_loop, act_loop;
     double Xzmp, Yzmp, actual_value, pid_output;
     //double setpoint;
-    double maxZMP, minZMP, ZMPerror;
     double x, y, z, x_robot, y_robot, z_robot;
     double x_acc;
 
