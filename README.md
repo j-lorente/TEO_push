@@ -1,7 +1,7 @@
 # TEO_push
 Push-recovery experiments with humanoid robot TEO (UC3M)
 
-*Ankle Strategy - Frontal plane*
+*Ankle Strategy - Y axis*
 
 Instructions:
 
