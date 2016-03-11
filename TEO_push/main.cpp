@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(1);  //Wait for port to open [s]
+    Time::delay(15);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
@@ -87,20 +87,13 @@ int main(int argc, char *argv[])
       Network::fini();
       return 1;
     }
-//    IVelocityControl *velLeftLeg;                 //Velocity controller
-//    if ( ! deviceLeftLeg.view(velLeftLeg) )
-//    {
-//        printf("[error] Problems acquiring robot left leg IVelocityControl interface.\n");
-//        return false;
-//    } else printf("[success] TEO_push acquired robot left leg IVelocityControl interface.\n");
-//    velLeftLeg->setVelocityMode();
-    IPositionControl *posLeftLeg;
-    if ( ! deviceLeftLeg.view(posLeftLeg) )
+    IVelocityControl *velLeftLeg;                 //Velocity controller
+    if ( ! deviceLeftLeg.view(velLeftLeg) )
     {
-        printf("[error] Problems acquiring robot left leg IPositionControl interface.\n");
+        printf("[error] Problems acquiring robot left leg IVelocityControl interface.\n");
         return false;
-    } else printf("[success] TEO_push acquired robot left leg IPositionControl interface.\n");
-    posLeftLeg->setPositionMode();
+    } else printf("[success] TEO_push acquired robot left leg IVelocityControl interface.\n");
+    velLeftLeg->setVelocityMode();
 
     //CONNECT TO ROBOT RIGHT LEG
     Property optionsRightLeg;                                 //YARP class for storing name-value (key-value) pairs
@@ -115,20 +108,13 @@ int main(int argc, char *argv[])
       Network::fini();
       return 1;
     }
-//    IVelocityControl *velRightLeg;                 //Velocity controller
-//    if ( ! deviceRightLeg.view(velRightLeg) )
-//    {
-//        printf("[error] Problems acquiring robot right leg IVelocityControl interface.\n");
-//        return false;
-//    } else printf("[success] TEO_push acquired robot right leg IVelocityControl interface.\n");
-//    velRightLeg->setVelocityMode();
-    IPositionControl *posRightLeg;
-    if ( ! deviceRightLeg.view(posRightLeg) )
+    IVelocityControl *velRightLeg;                 //Velocity controller
+    if ( ! deviceRightLeg.view(velRightLeg) )
     {
-        printf("[error] Problems acquiring robot right leg IPositionControl interface.\n");
+        printf("[error] Problems acquiring robot right leg IVelocityControl interface.\n");
         return false;
-    } else printf("[success] TEO_push acquired robot right leg IPositionControl interface.\n");
-    posRightLeg->setPositionMode();
+    } else printf("[success] TEO_push acquired robot right leg IVelocityControl interface.\n");
+    velRightLeg->setVelocityMode();
 
     //CONNECT TO ROBOT TRUNK
     Property optionsTrunk;                                    //YARP class for storing name-value (key-value) pairs
@@ -153,8 +139,7 @@ int main(int argc, char *argv[])
 
     //CONTROL LOOP
     MyRateThread myRateThread;
-    //myRateThread.set(velRightLeg, velLeftLeg, velTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
-    myRateThread.set(posRightLeg, posLeftLeg, velTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
+    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
     myRateThread.start();
 
     //WAIT FOR ENTER AND EXIT LOOP

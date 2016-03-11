@@ -67,12 +67,12 @@ public:
         pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
         pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-        //TEST
-        posLeftLeg->positionMove(4, 0);
-        posRightLeg->positionMove(4, 0);
+        //TEST HIP STRATEGY
+        velLeftLeg->velocityMove(4, -pid_output_ankle);   //Motor number. Velocity [deg/s].
+        velRightLeg->velocityMove(4, -pid_output_ankle);  //Motor number. Velocity [deg/s].
         velTrunk->velocityMove(1, pid_output_hip);
 
-        //JOINTS CONTROL
+//        //JOINTS CONTROL
 //        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
 //        {
 //            velLeftLeg->velocityMove(4, -pid_output_ankle);   //Motor number. Velocity [deg/s].
@@ -142,22 +142,11 @@ public:
         out.close();
     }
 
-//    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
-//             PID *value2, PID *value3, BufferedPort<Bottle> *value4)
-//    {
-//        velRightLeg = value;
-//        velLeftLeg = value0;
-//        velTrunk = value1;
-//        pidcontroller_ankle = value2;
-//        pidcontroller_hip = value3;
-//        readPort = value4;
-//    }
-
-    void set(IPositionControl *value, IPositionControl *value0, IVelocityControl *value1,
+    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
              PID *value2, PID *value3, BufferedPort<Bottle> *value4)
     {
-        posRightLeg = value;
-        posLeftLeg = value0;
+        velRightLeg = value;
+        velLeftLeg = value0;
         velTrunk = value1;
         pidcontroller_ankle = value2;
         pidcontroller_hip = value3;
@@ -167,8 +156,7 @@ public:
 private:
     BufferedPort<Bottle> *readPort;
     PID *pidcontroller_ankle, *pidcontroller_hip;
-    IVelocityControl *velTrunk; //*velRightLeg, *velLeftLeg;
-    IPositionControl *posRightLeg, *posLeftLeg;
+    IVelocityControl *velTrunk, *velRightLeg, *velLeftLeg;
 
     int iteration;
     double x, y, z, x_robot, y_robot, z_robot, x_acc;
