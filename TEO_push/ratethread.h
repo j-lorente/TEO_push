@@ -62,11 +62,12 @@ public:
         pid_output = pidcontroller->calculate(setpoint, actual_value);
 
         //SEND MOTOR VELOCITY THROUGH YARP
-        velRightLeg->velocityMove(5, -pid_output); //Right Leg - Waist
-        velRightLeg->velocityMove(1, pid_output); //Right Leg - Ankle
-
-        velLeftLeg->velocityMove(5, pid_output); //Left Leg - Waist
-        velLeftLeg->velocityMove(1, -pid_output); //Left Leg - Ankle
+            //Right Leg
+        velRightLeg->velocityMove(5, -pid_output); //Waist
+        velRightLeg->velocityMove(1, -pid_output); //Ankle
+            //Left Leg
+        velLeftLeg->velocityMove(5, pid_output); //Waist
+        velLeftLeg->velocityMove(1, pid_output); //Ankle
 
         saveInFile();  //Save relevant data in external file for posterior plotting
 

@@ -1,7 +1,7 @@
 // -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
 
 /*  Juan Lorente                                */
-/*  Masters' Thesis                             */
+/*  Master's Thesis                             */
 /*  Push-recovery experiments with robot TEO    */
 
 //#include <stdio.h>
@@ -24,14 +24,14 @@ using namespace yarp::dev;
 #define Zcom 103.6602 //Distance to COM in Z axis [cm]
 
 //Low-pass Filter
-#define samples 15 //Number of samples for computing average
+#define samples 30 //Number of samples for computing average
 
 //PID parameters
 #define dt 0.05 //Loop interval time [assumption: s]
 #define max 10 //Maximum output value
 #define min -10 //Minimum output value
 #define Kp 0.1 //Proportional gain
-#define Kd 0.05 //Derivative gain
+#define Kd 0.01 //Derivative gain
 #define Ki 0.001 //Integral gain
 //#define setpoint 0 //Desired value [cm]
 
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(15);  //Wait for port to open [s]
+    Time::delay(5);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
