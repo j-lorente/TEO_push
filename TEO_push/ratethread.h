@@ -57,14 +57,6 @@ public:
         lin_vel = x_sensor.at(0) * dt;
         w = sqrt(g / (Zcom / 100));
         capture_point = (lin_vel / w) + (Xzmp / 100);
-        cout << "Linear velocity: " << lin_vel << " m/s" << endl;
-        cout << "g: " << g << " m/s²" << endl;
-        cout << "Zcom: " << Zcom/100 << " m" << endl;
-        cout << "w: " << w << " rad/s" << endl;
-        cout << "Xcom: " << Xzmp/100 << " m" << endl;
-        cout << "Capture point: " << capture_point << " m" << endl;
-        if (capture_point < 0.12 && capture_point > -0.12) {cout << "ANKLE STRATEGY" << endl;}
-        else {cout << "HIP STRATEGY" << endl;}
 
         //PID
         actual_value = Xzmp;
@@ -127,6 +119,10 @@ public:
         cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
         cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
         cout << "Setpoint = " << setpoint << endl;
+        if (capture_point < 0.12 && capture_point > -0.12)
+            cout << "ANKLE STRATEGY" << endl;
+        else
+            cout << "HIP STRATEGY" << endl;
         cout << "PID output (Ankle) = " << pid_output_ankle << endl;
         cout << "PID output (Hip) = " << pid_output_hip << endl << endl;
         cout << "Loop time: " << act_loop << " ms" << endl;
@@ -136,9 +132,13 @@ public:
     void saveInFile()
     {
         ofstream out;
-        if (iteration==1) {out.open("data.txt",ios::trunc);}        //The first time deletes previous content
-        else {out.open("data.txt",ios::app);}                       //The following times appends data to the file
-        out << act_time << " " << x_acc << " " << x << " " << setpoint << " " << Xzmp << endl;
+        if (iteration==1) {out.open("data.txt",ios::trunc);}    //The first time deletes previous content
+        else {out.open("data.txt",ios::app);}                   //The following times appends data to the file
+        out << act_time << " " << x_acc << " " << x << " " << setpoint << " " << Xzmp << " ";
+        if(capture_point < 0.12 && capture_point > -0.12)
+            out << 0 << endl;
+        else
+            out << 1 << endl;
         out.close();
     }
 
@@ -171,13 +171,11 @@ private:
     IPositionControl *posRightLeg, *posLeftLeg;
 
     int iteration;
-    double capture_point;
     double x, y, z, x_robot, y_robot, z_robot, x_acc;
     double init_time, act_time, init_loop, act_loop;
     double Xzmp, Yzmp, actual_value, pid_output_ankle, pid_output_hip;
      //double setpoint;
-    double maxZMP, minZMP, ZMPerror;
-    double lin_vel, w;
+    double capture_point, lin_vel, w;
 
     deque<double> x_sensor, y_sensor, z_sensor;
 };
