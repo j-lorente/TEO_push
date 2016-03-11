@@ -63,11 +63,11 @@ public:
 
         //SEND MOTOR VELOCITY THROUGH YARP
             //Right Leg
-        velRightLeg->velocityMove(5, -pid_output); //Waist
-        velRightLeg->velocityMove(1, -pid_output); //Ankle
+        velRightLeg->velocityMove(5, -pid_output);  //Waist
+        velRightLeg->velocityMove(1, -pid_output);  //Ankle
             //Left Leg
-        velLeftLeg->velocityMove(5, pid_output); //Waist
-        velLeftLeg->velocityMove(1, pid_output); //Ankle
+        velLeftLeg->velocityMove(5, pid_output);    //Waist
+        velLeftLeg->velocityMove(1, pid_output);    //Ankle
 
         saveInFile();  //Save relevant data in external file for posterior plotting
 
