@@ -53,9 +53,6 @@ public:
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
-        //CALCULATE ZMP ERROR
-        ZMPerror = getError();
-
         //PID
         actual_value = Xzmp;
 //        if (iteration==1)
