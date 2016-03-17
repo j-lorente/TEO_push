@@ -41,13 +41,9 @@ using namespace yarp::dev;
 #define Kd_ankle 0.01 //Derivative gain
 #define Ki_ankle 0.001 //Integral gain
     //Hip parameters
-#define Kp_hip 0.1 //Proportional gain
+#define Kp_hip 10 //Proportional gain
 #define Kd_hip 0.01 //Derivative gain
 #define Ki_hip 0.001 //Integral gain
-//Hip driver parameters
-//#define Kp_hip 0.14999
-//#define Kd_hip 0
-//#define Ki_hip 0.00054932
 
 #include "ratethread.h"
 
@@ -87,7 +83,8 @@ int main(int argc, char *argv[])
       Network::fini();
       return 1;
     }
-    IVelocityControl *velLeftLeg;                 //Velocity controller
+    //Velocity controller
+    IVelocityControl *velLeftLeg;
     if ( ! deviceLeftLeg.view(velLeftLeg) )
     {
         printf("[error] Problems acquiring robot left leg IVelocityControl interface.\n");
@@ -108,7 +105,8 @@ int main(int argc, char *argv[])
       Network::fini();
       return 1;
     }
-    IVelocityControl *velRightLeg;                 //Velocity controller
+    //Velocity controller
+    IVelocityControl *velRightLeg;
     if ( ! deviceRightLeg.view(velRightLeg) )
     {
         printf("[error] Problems acquiring robot right leg IVelocityControl interface.\n");
@@ -129,17 +127,26 @@ int main(int argc, char *argv[])
       Network::fini();
       return 1;
     }
-    IVelocityControl *velTrunk;                 //Velocity controller
+    //Velocity controller
+    IVelocityControl *velTrunk;
     if ( ! deviceTrunk.view(velTrunk) )
     {
        printf("[error] Problems acquiring robot trunk IVelocityControl interface.\n");
        return false;
     } else printf("[success] TEO_push acquired robot trunk IVelocityControl interface.\n");
     velTrunk->setVelocityMode();
+    //Position controller
+    IPositionControl *posTrunk;
+    if ( ! deviceTrunk.view(posTrunk) )
+    {
+       printf("[error] Problems acquiring robot trunk IPositionControl interface.\n");
+       return false;
+    } else printf("[success] TEO_push acquired robot trunk IPositionControl interface.\n");
+    posTrunk->setPositionMode();
 
     //CONTROL LOOP
     MyRateThread myRateThread;
-    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
+    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
     myRateThread.start();
 
     //WAIT FOR ENTER AND EXIT LOOP

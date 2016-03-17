@@ -58,6 +58,17 @@ public:
         w = sqrt(g / (Zcom / 100));
         capture_point = (lin_vel / w) + (Xzmp / 100);
 
+        //PRUEBAS
+        //Prueba plot zmp - BIEN
+        //Prueba push-recovery con 15 samples - MAL
+        ///Prueba push-recovery con 30 samples
+        ///Dos opciones para ZMP real (tarda 1,5s la media)
+            ///1.Cambiar media de aceleracion por aceleracion y sacar otro ZMP
+            ///2.Usar euler angle, Zcom y trigonometria para sacar COMx
+        ///Usar 15 samples para determining strategy y 30 para control
+        ///Rango -1<zmp<1 que se ponga en posicion 0
+        ///Calcular tiempo entre iteraciones (50ms?)
+
         //PID
         actual_value = Xzmp;
 //        if (iteration==1)
@@ -67,23 +78,19 @@ public:
         pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
         pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-        //TEST HIP STRATEGY
-        velLeftLeg->velocityMove(4, -pid_output_ankle);   //Motor number. Velocity [deg/s].
-        velRightLeg->velocityMove(4, -pid_output_ankle);  //Motor number. Velocity [deg/s].
-        velTrunk->velocityMove(1, pid_output_hip);
-
-//        //JOINTS CONTROL
-//        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
-//        {
-//            velLeftLeg->velocityMove(4, -pid_output_ankle);   //Motor number. Velocity [deg/s].
-//            velRightLeg->velocityMove(4, -pid_output_ankle);  //Motor number. Velocity [deg/s].
-//        }
-//        else //Hip strategy
-//        {
-//            velLeftLeg->velocityMove(4, -pid_output_ankle);   //Motor number. Velocity [deg/s].
-//            velRightLeg->velocityMove(4, -pid_output_ankle);  //Motor number. Velocity [deg/s].
-//            velTrunk->velocityMove(1, pid_output_hip);       //Motor number. Velocity [deg/s].
-//        }
+        //JOINTS CONTROL
+        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
+        {
+            velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
+            velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
+            posTrunk->positionMove(1,0);                        //Hip
+        }
+        else //Hip strategy
+        {
+            velLeftLeg->velocityMove(4, pid_output_ankle);     //Left Ankle
+            velRightLeg->velocityMove(4, pid_output_ankle);    //Right Ankle
+            velTrunk->velocityMove(1, pid_output_hip);          //Hip
+        }
 
         saveInFile(); //Save relevant data in external file for posterior plotting
 
@@ -134,7 +141,11 @@ public:
         ofstream out;
         if (iteration==1) {out.open("data.txt",ios::trunc);}    //The first time deletes previous content
         else {out.open("data.txt",ios::app);}                   //The following times appends data to the file
-        out << act_time << " " << x_acc << " " << x << " " << setpoint << " " << Xzmp << " ";
+        out << act_time << " ";
+        out << x_acc << " ";
+        out << x << " ";
+        out << setpoint << " ";
+        out << Xzmp << " ";
         if(capture_point < 0.12 && capture_point > -0.12)
             out << 0 << endl;
         else
@@ -143,26 +154,28 @@ public:
     }
 
     void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
-             PID *value2, PID *value3, BufferedPort<Bottle> *value4)
+             IPositionControl *value2, PID *value3, PID *value4, BufferedPort<Bottle> *value5)
     {
         velRightLeg = value;
         velLeftLeg = value0;
         velTrunk = value1;
-        pidcontroller_ankle = value2;
-        pidcontroller_hip = value3;
-        readPort = value4;
+        posTrunk = value2;
+        pidcontroller_ankle = value3;
+        pidcontroller_hip = value4;
+        readPort = value5;
     }
 
 private:
     BufferedPort<Bottle> *readPort;
     PID *pidcontroller_ankle, *pidcontroller_hip;
     IVelocityControl *velTrunk, *velRightLeg, *velLeftLeg;
+    IPositionControl *posTrunk;
 
     int iteration;
     double x, y, z, x_robot, y_robot, z_robot, x_acc;
     double init_time, act_time, init_loop, act_loop;
     double Xzmp, Yzmp, actual_value, pid_output_ankle, pid_output_hip;
-     //double setpoint;
+    //double setpoint;
     double capture_point, lin_vel, w;
 
     deque<double> x_sensor, y_sensor, z_sensor;
