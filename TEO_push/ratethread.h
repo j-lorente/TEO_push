@@ -59,9 +59,7 @@ public:
         capture_point = (lin_vel / w) + (Xzmp / 100);
 
         //PRUEBAS
-        //Prueba plot zmp - BIEN
-        //Prueba push-recovery con 15 samples - MAL
-        ///Prueba push-recovery con 30 samples
+        ///Determining strategy por experimentacion
         ///Dos opciones para ZMP real (tarda 1,5s la media)
             ///1.Cambiar media de aceleracion por aceleracion y sacar otro ZMP
             ///2.Usar euler angle, Zcom y trigonometria para sacar COMx
