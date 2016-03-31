@@ -54,18 +54,15 @@ public:
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
         //DETERMINING STRATEGY
+
         lin_vel = x_sensor.at(0) * dt;
         w = sqrt(g / (Zcom / 100));
         capture_point = (lin_vel / w) + (Xzmp / 100);
 
         //PRUEBAS
         ///Determining strategy por experimentacion
-        ///Dos opciones para ZMP real (tarda 1,5s la media)
-            ///1.Cambiar media de aceleracion por aceleracion y sacar otro ZMP
-            ///2.Usar euler angle, Zcom y trigonometria para sacar COMx
         ///Usar 15 samples para determining strategy y 30 para control
-        ///Rango -1<zmp<1 que se ponga en posicion 0
-        ///Calcular tiempo entre iteraciones (50ms?)
+        ///Probar Kp_hip 1 o 10
 
         //PID
         actual_value = Xzmp;
@@ -77,18 +74,22 @@ public:
         pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
         //JOINTS CONTROL
-        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
-        {
-            velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
-            velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
-            posTrunk->positionMove(1,0);                        //Hip
-        }
-        else //Hip strategy
-        {
-            velLeftLeg->velocityMove(4, pid_output_ankle);     //Left Ankle
-            velRightLeg->velocityMove(4, pid_output_ankle);    //Right Ankle
-            velTrunk->velocityMove(1, pid_output_hip);          //Hip
-        }
+//        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
+//        {
+//            velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
+//            velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
+//            posTrunk->positionMove(1,0);                        //Hip
+//        }
+//        else //Hip strategy
+//        {
+//            velLeftLeg->velocityMove(4, pid_output_ankle);     //Left Ankle
+//            velRightLeg->velocityMove(4, pid_output_ankle);    //Right Ankle
+            //velTrunk->velocityMove(1, pid_output_hip);         //Hip
+
+            velTrunk->velocityMove(1, 0.3);
+            posTrunk->positionMove(1,0);
+
+//        }
 
         saveInFile(); //Save relevant data in external file for posterior plotting
 
@@ -109,6 +110,8 @@ public:
             init_time = Time::now();
         }
         init_loop = Time::now();
+        it_time = init_loop - it_prev;
+        it_prev = init_loop;
     }
 
     void getCurrentTime()
@@ -130,7 +133,8 @@ public:
             cout << "HIP STRATEGY" << endl;
         cout << "PID output (Ankle) = " << pid_output_ankle << endl;
         cout << "PID output (Hip) = " << pid_output_hip << endl << endl;
-        cout << "Loop time: " << act_loop << " ms" << endl;
+        cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
+        cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
         cout << "Absolute time: " << int(act_time) << " s" << endl;
     }
 
@@ -171,7 +175,7 @@ private:
 
     int iteration;
     double x, y, z, x_robot, y_robot, z_robot, x_acc;
-    double init_time, act_time, init_loop, act_loop;
+    double init_time, act_time, init_loop, act_loop, it_prev, it_time;
     double Xzmp, Yzmp, actual_value, pid_output_ankle, pid_output_hip;
     //double setpoint;
     double capture_point, lin_vel, w;

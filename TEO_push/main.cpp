@@ -28,7 +28,8 @@ using namespace yarp::dev;
 #define Zcom 103.6602 //Distance to COM in Z axis [cm]
 
 //Low-pass Filter
-#define samples 30 //Number of samples for computing average
+#define samples 15       //Number of samples for computing average
+//#define samples_strategy 15     //Number of samples for determining strategy
 
 //Ankle PID parameters
 #define dt 0.05 //Loop interval time [assumption: s]
@@ -40,7 +41,7 @@ using namespace yarp::dev;
 #define Kd_ankle 0.01 //Derivative gain
 #define Ki_ankle 0.001 //Integral gain
     //Hip parameters
-#define Kp_hip 10 //Proportional gain
+#define Kp_hip 0.25 //Proportional gain
 #define Kd_hip 0.01 //Derivative gain
 #define Ki_hip 0.001 //Integral gain
 
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(15);  //Wait for port to open [s]
+    Time::delay(1);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
