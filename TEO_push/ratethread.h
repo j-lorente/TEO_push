@@ -84,12 +84,11 @@ public:
 //        {
 //            velLeftLeg->velocityMove(4, pid_output_ankle);     //Left Ankle
 //            velRightLeg->velocityMove(4, pid_output_ankle);    //Right Ankle
-            //velTrunk->velocityMove(1, pid_output_hip);         //Hip
-
-            velTrunk->velocityMove(1, 0.3);
-            posTrunk->positionMove(1,0);
-
+//            velTrunk->velocityMove(1, pid_output_hip);         //Hip
 //        }
+
+        velTrunk->velocityMove(1, 2.5);
+        //posTrunk->positionMove(1,0);
 
         saveInFile(); //Save relevant data in external file for posterior plotting
 
@@ -151,7 +150,7 @@ public:
         if(capture_point < 0.12 && capture_point > -0.12)
             out << 0 << endl;
         else
-            out << 1 << endl;
+            out << 5 << endl;
         out.close();
     }
 

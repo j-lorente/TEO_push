@@ -37,7 +37,7 @@ using namespace yarp::dev;
 #define min -10 //Minimum output value
 #define setpoint 0 //Desired value [cm]
     //Ankle parameters
-#define Kp_ankle 0.1 //Proportional gain
+#define Kp_ankle 0.01 //Proportional gain
 #define Kd_ankle 0.01 //Derivative gain
 #define Ki_ankle 0.001 //Integral gain
     //Hip parameters
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(1);  //Wait for port to open [s]
+    Time::delay(5);  //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
