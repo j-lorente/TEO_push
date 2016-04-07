@@ -56,18 +56,21 @@ int main(int argc, char *argv[])
 
     //INITIALISE AND CHECK YARP
     Network yarp;
-    if ( ! yarp.checkNetwork() ) {
-        fprintf(stderr,"[error] %s found no YARP network (try running \"yarp detect --write\").\n",argv[0]);
+    if ( ! yarp.checkNetwork() ){
+        cout << "[error] YARP network not found (try running \"yarp detect --write\")." << endl;
         return -1;
-    } else printf("[success] YARP network found.\n");
+    } else cout << "[success] YARP network found." << endl;
 
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(1);  //Wait for port to open [s]
+    Time::delay(1);                         //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
+    if ( NetworkBase::isConnected("/inertial", "/inertial:i") == false ){
+        cout << "[error] Couldn't connect to YARP port /inertial:i (check if IMU is running)." << endl;
+    } else cout << "[success] Connected to IMU." << endl;
     Time::delay(0.5);  //Wait for ports connect [s]
 
     //CONNECT TO ROBOT LEFT LEG
@@ -78,7 +81,7 @@ int main(int argc, char *argv[])
     PolyDriver deviceLeftLeg(optionsLeftLeg);               //YARP multi-use driver with the given options
     if(!deviceLeftLeg.isValid())
     {
-      printf("[error] /teo/leftLeg device not available.\n");
+      cout << "[error] /teo/leftLeg device not available." << endl;
       deviceLeftLeg.close();
       Network::fini();
       return 1;
@@ -87,9 +90,9 @@ int main(int argc, char *argv[])
     IVelocityControl *velLeftLeg;
     if ( ! deviceLeftLeg.view(velLeftLeg) )
     {
-        printf("[error] Problems acquiring robot left leg IVelocityControl interface.\n");
+        cout << "[error] Problems acquiring robot left leg IVelocityControl interface." << endl;
         return false;
-    } else printf("[success] TEO_push acquired robot left leg IVelocityControl interface.\n");
+    } else cout << "[success] Robot left leg IVelocityControl interface acquired." << endl;
     velLeftLeg->setVelocityMode();
 
     //CONNECT TO ROBOT RIGHT LEG
@@ -100,7 +103,7 @@ int main(int argc, char *argv[])
     PolyDriver deviceRightLeg(optionsRightLeg);               //YARP multi-use driver with the given options
     if(!deviceRightLeg.isValid())
     {
-      printf("[error] /teo/rightLeg device not available.\n");
+      cout << "[error] /teo/rightLeg device not available." << endl;
       deviceRightLeg.close();
       Network::fini();
       return 1;
@@ -109,9 +112,9 @@ int main(int argc, char *argv[])
     IVelocityControl *velRightLeg;
     if ( ! deviceRightLeg.view(velRightLeg) )
     {
-        printf("[error] Problems acquiring robot right leg IVelocityControl interface.\n");
+        cout << "[error] Problems acquiring robot right leg IVelocityControl interface." << endl;
         return false;
-    } else printf("[success] TEO_push acquired robot right leg IVelocityControl interface.\n");
+    } else cout << "[success] Robot right leg IVelocityControl interface acquired." << endl;
     velRightLeg->setVelocityMode();
 
     //CONNECT TO ROBOT TRUNK
@@ -122,7 +125,7 @@ int main(int argc, char *argv[])
     PolyDriver deviceTrunk(optionsTrunk);                     //YARP multi-use driver with the given options
     if(!deviceTrunk.isValid())
     {
-      printf("[error] /teo/trunk device not available.\n");
+      cout << "[error] /teo/trunk device not available." << endl;
       deviceTrunk.close();
       Network::fini();
       return 1;
@@ -131,17 +134,17 @@ int main(int argc, char *argv[])
     IVelocityControl *velTrunk;
     if ( ! deviceTrunk.view(velTrunk) )
     {
-       printf("[error] Problems acquiring robot trunk IVelocityControl interface.\n");
+       cout << "[error] Problems acquiring robot trunk IVelocityControl interface." << endl;
        return false;
-    } else printf("[success] TEO_push acquired robot trunk IVelocityControl interface.\n");
+    } else cout << "[success] Robot trunk IVelocityControl interface acquired." << endl;
     velTrunk->setVelocityMode();
     //Position controller
     IPositionControl *posTrunk;
     if ( ! deviceTrunk.view(posTrunk) )
     {
-       printf("[error] Problems acquiring robot trunk IPositionControl interface.\n");
+       cout << "[error] Problems acquiring robot trunk IPositionControl interface." << endl;
        return false;
-    } else printf("[success] TEO_push acquired robot trunk IPositionControl interface.\n");
+    } else cout << "[success] Robot trunk IPositionControl interface acquired." << endl;
     posTrunk->setPositionMode();
 
     //CONTROL LOOP

@@ -19,7 +19,7 @@ public:
         Bottle *input = readPort->read();
         if (input==NULL)
         {
-             printf("[error] No data from sensor...\n");
+             cout << "[error] No data from sensor..." << endl;
              return;
         }
         x_acc = input->get(3).asDouble();
@@ -54,7 +54,6 @@ public:
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
         //DETERMINING STRATEGY
-
         lin_vel = x_sensor.at(0) * dt;
         w = sqrt(g / (Zcom / 100));
         capture_point = (lin_vel / w) + (Xzmp / 100);
@@ -87,7 +86,9 @@ public:
 //            velTrunk->velocityMove(1, pid_output_hip);         //Hip
 //        }
 
-        velTrunk->velocityMove(1, 2.5);
+        //velTrunk->velocityMove(1, 2);
+        double vels[2] = {0,2.0};
+        velTrunk->velocityMove(vels);
         //posTrunk->positionMove(1,0);
 
         saveInFile(); //Save relevant data in external file for posterior plotting
