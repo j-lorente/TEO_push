@@ -1,7 +1,7 @@
 # TEO_push
-Push-recovery experiments with humanoid robot TEO (UC3M)
+Equilibrium Control for Humanoid Robot TEO by Inertial Perception
 
-*Ankle Strategy - X axis*
+*Sagittal Ankle Strategy*
 
 Instructions:
 
