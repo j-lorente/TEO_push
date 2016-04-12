@@ -58,38 +58,31 @@ public:
         w = sqrt(g / (Zcom / 100));
         capture_point = (lin_vel / w) + (Xzmp / 100);
 
-        //PRUEBAS
-        ///Determining strategy por experimentacion
-        ///Usar 15 samples para determining strategy y 30 para control
-        ///Probar Kp_hip 1 o 10
-
         //PID
         actual_value = Xzmp;
-//        if (iteration==1)
-//        {
-//            setpoint = Xzmp; //Get initial position as setpoint [cm]
-//        }
+        if (iteration==1)
+        {
+            setpoint = Xzmp; //Get initial position as setpoint [cm]
+        }
         pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
         pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-        //JOINTS CONTROL
-//        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
-//        {
-//            velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
-//            velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
-//            posTrunk->positionMove(1,0);                        //Hip
-//        }
-//        else //Hip strategy
-//        {
-//            velLeftLeg->velocityMove(4, pid_output_ankle);     //Left Ankle
-//            velRightLeg->velocityMove(4, pid_output_ankle);    //Right Ankle
-//            velTrunk->velocityMove(1, pid_output_hip);         //Hip
-//        }
+        getTrunkEncoders(); //Get encoders (Needed because trunk has relative encoders)
 
-        //velTrunk->velocityMove(1, 2);
-        double vels[2] = {0,2.0};
-        velTrunk->velocityMove(vels);
-        //posTrunk->positionMove(1,0);
+        //JOINTS CONTROL
+        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
+        {
+            velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
+            velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
+            posTrunk->positionMove(1,initial_encoder);          //Hip
+        }
+        else //Hip strategy
+        {
+            velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
+            velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
+            //velTrunk->velocityMove(1, pid_output_hip);         //Hip
+            posTrunk->positionMove(1,pid_output_hip);
+        }
 
         saveInFile(); //Save relevant data in external file for posterior plotting
 
@@ -105,10 +98,7 @@ public:
 
     void getInitialTime()
     {
-        if (iteration==1)
-        {
-            init_time = Time::now();
-        }
+        if (iteration==1){init_time = Time::now();}
         init_loop = Time::now();
         it_time = init_loop - it_prev;
         it_prev = init_loop;
@@ -118,6 +108,34 @@ public:
     {
         act_time = Time::now() - init_time;
         act_loop = Time::now() - init_loop;
+    }
+
+    void getTrunkEncoders()
+    {
+        //Get joints
+        posTrunk->getAxes(&joints);
+        encoders.resize(joints);
+
+        //Get encoders
+        if (iteration == 1)
+        {
+            cout << "Reading encoders..." << endl;
+            while ( ! encTrunk->getEncoders(encoders.data())){}
+            for(int i=0;i<joints;i++){
+                cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
+            initial_encoder = encoders[1];
+        }
+        else
+        {
+            if (! encTrunk->getEncoders(encoders.data())){
+                cout << "[error] Problem acquiring robot trunk encoders." << endl;}
+            else
+            {
+                for(int i=0;i<joints;i++){
+                    cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
+            }
+        }
+        cout << endl;
     }
 
     void printData()
@@ -156,7 +174,7 @@ public:
     }
 
     void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
-             IPositionControl *value2, PID *value3, PID *value4, BufferedPort<Bottle> *value5)
+             IPositionControl *value2, PID *value3, PID *value4, BufferedPort<Bottle> *value5, IEncoders *value6)
     {
         velRightLeg = value;
         velLeftLeg = value0;
@@ -165,6 +183,7 @@ public:
         pidcontroller_ankle = value3;
         pidcontroller_hip = value4;
         readPort = value5;
+        encTrunk = value6;
     }
 
 private:
@@ -172,13 +191,16 @@ private:
     PID *pidcontroller_ankle, *pidcontroller_hip;
     IVelocityControl *velTrunk, *velRightLeg, *velLeftLeg;
     IPositionControl *posTrunk;
+    IEncoders *encTrunk;
 
-    int iteration;
+    int iteration, joints;
     double x, y, z, x_robot, y_robot, z_robot, x_acc;
     double init_time, act_time, init_loop, act_loop, it_prev, it_time;
     double Xzmp, Yzmp, actual_value, pid_output_ankle, pid_output_hip;
-    //double setpoint;
-    double capture_point, lin_vel, w;
+    double setpoint;
+    double capture_point, lin_vel, w, initial_encoder;
+
+    vector<double> encoders;
 
     deque<double> x_sensor, y_sensor, z_sensor;
 };

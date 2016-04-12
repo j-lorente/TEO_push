@@ -29,19 +29,18 @@ using namespace yarp::dev;
 
 //Low-pass Filter
 #define samples 15       //Number of samples for computing average
-//#define samples_strategy 15     //Number of samples for determining strategy
 
 //Ankle PID parameters
 #define dt 0.05 //Loop interval time [assumption: s]
 #define max 10 //Maximum output value
 #define min -10 //Minimum output value
-#define setpoint 0 //Desired value [cm]
+//#define setpoint 0 //Desired value [cm]
     //Ankle parameters
-#define Kp_ankle 0.01 //Proportional gain
+#define Kp_ankle 0.1 //Proportional gain
 #define Kd_ankle 0.01 //Derivative gain
 #define Ki_ankle 0.001 //Integral gain
     //Hip parameters
-#define Kp_hip 0.25 //Proportional gain
+#define Kp_hip 1 //Proportional gain
 #define Kd_hip 0.01 //Derivative gain
 #define Ki_hip 0.001 //Integral gain
 
@@ -146,10 +145,18 @@ int main(int argc, char *argv[])
        return false;
     } else cout << "[success] Robot trunk IPositionControl interface acquired." << endl;
     posTrunk->setPositionMode();
+    //Encoders
+    IEncoders *encTrunk;
+    if( ! deviceTrunk.view(encTrunk) )
+    {
+        cout << "[error] Problems acquiring robot trunk Encoders interface." << endl;
+        return false;
+    }else cout << "[success] Robot trunk Encoders interface acquired." << endl;
 
     //CONTROL LOOP
     MyRateThread myRateThread;
-    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle, &pidcontroller_hip, &readPort);
+    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, posTrunk,
+                     &pidcontroller_ankle, &pidcontroller_hip, &readPort, encTrunk);
     myRateThread.start();
 
     //WAIT FOR ENTER AND EXIT LOOP
