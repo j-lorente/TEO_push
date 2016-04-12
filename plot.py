@@ -20,13 +20,13 @@ setpoint = data[:,3]
 zmp = data[:,4]
 strategy = data[:,5]
 
-initial_x = t[0]
 final_x = t[len(data)-1]
+print final_x
 
 plt.subplot(311)
 plt.plot(t, acc, linestyle='-', color='r', label='Sensor acceleration')
 plt.plot(t, acc_avg, linestyle='-', color='b', label='Average acceleration')
-plt.axis([initial_x, final_x, -11, 11])
+plt.axis([0, final_x, -11, 11])
 plt.title('Acceleration in X')
 plt.xlabel('s')
 plt.ylabel('m/s^2')
@@ -36,7 +36,7 @@ plt.legend()
 plt.subplot(312)
 plt.plot(t, setpoint, linestyle='-', color='r', label='Setpoint')
 plt.plot(t, zmp, linestyle='-', color='b', label='Current ZMP')
-plt.axis([initial_x, final_x, -11, 11])
+plt.axis([0, final_x, -11, 11])
 plt.title('Zero Moment Point')
 plt.xlabel('s')
 plt.ylabel('cm')
@@ -45,7 +45,7 @@ plt.legend()
 
 plt.subplot(313)
 plt.plot(t, strategy, linestyle='-', color='g', label='0 = Ankle / 5 = Hip')
-plt.axis([initial_x, final_x, -11, 11])
+plt.axis([0, final_x, -11, 11])
 plt.title('Strategy')
 plt.xlabel('s')
 plt.grid(True)
