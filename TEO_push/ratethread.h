@@ -77,12 +77,12 @@ public:
         if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
         {
             //Right Leg
-            //velRightLeg->velocityMove(4, -pid_output_ankle_sagittal);
+            velRightLeg->velocityMove(4, -pid_output_ankle_sagittal);
             velRightLeg->velocityMove(5, -pid_output_ankle_frontal);
             velRightLeg->velocityMove(1, -pid_output_ankle_frontal);
 
             //Left Leg
-            //velLeftLeg->velocityMove(4, -pid_output_ankle_sagittal);
+            velLeftLeg->velocityMove(4, -pid_output_ankle_sagittal);
             velLeftLeg->velocityMove(5, pid_output_ankle_frontal);
             velLeftLeg->velocityMove(1, pid_output_ankle_frontal);
 
@@ -92,12 +92,12 @@ public:
         else //Hip strategy
         {
             //Right Leg
-            //velRightLeg->velocityMove(4, -pid_output_ankle_sagittal);
+            velRightLeg->velocityMove(4, -pid_output_ankle_sagittal);
             velRightLeg->velocityMove(5, -pid_output_ankle_frontal);
             velRightLeg->velocityMove(1, -pid_output_ankle_frontal);
 
             //Left Leg
-            //velLeftLeg->velocityMove(4, -pid_output_ankle_sagittal);
+            velLeftLeg->velocityMove(4, -pid_output_ankle_sagittal);
             velLeftLeg->velocityMove(5, pid_output_ankle_frontal);
             velLeftLeg->velocityMove(1, pid_output_ankle_frontal);
 
