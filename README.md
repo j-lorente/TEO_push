@@ -1,7 +1,6 @@
 # TEO_push
-Equilibrium Control for Humanoid Robot TEO by Inertial Perception
+2D Equilibrium Control for Humanoid Robot TEO by Inertial Perception
 
-*Sagittal Plane*
 
 Instructions:
 
