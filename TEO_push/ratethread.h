@@ -67,9 +67,9 @@ public:
             setpoint_x = Xzmp;
             setpoint_y = Yzmp;
         }
-        pid_output_ankle_sagittal = pidcontroller_ankle->calculate(setpoint_x, actual_value_x);
-        pid_output_ankle_frontal = pidcontroller_ankle->calculate(setpoint_y, actual_value_y);
-        pid_output_hip = pidcontroller_hip->calculate(setpoint_x, actual_value_x);
+        pid_output_ankle_sagittal = pidcontroller_ankle_s->calculate(setpoint_x, actual_value_x);
+        pid_output_ankle_frontal = pidcontroller_ankle_f->calculate(setpoint_y, actual_value_y);
+        //pid_output_hip = pidcontroller_hip->calculate(setpoint_x, actual_value_x);
 
         getTrunkEncoders(); //Get encoders (Needed because trunk has relative encoders)
 
@@ -195,22 +195,23 @@ public:
         out.close();
     }
 
-    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1,
-             IPositionControl *value2, PID *value3, PID *value4, BufferedPort<Bottle> *value5, IEncoders *value6)
+    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1, IPositionControl *value2,
+             PID *value3, PID *value4, PID *value5, BufferedPort<Bottle> *value6, IEncoders *value7)
     {
         velRightLeg = value;
         velLeftLeg = value0;
         velTrunk = value1;
         posTrunk = value2;
-        pidcontroller_ankle = value3;
-        pidcontroller_hip = value4;
-        readPort = value5;
-        encTrunk = value6;
+        pidcontroller_ankle_s = value3;
+        pidcontroller_ankle_f = value4;
+        pidcontroller_hip = value5;
+        readPort = value6;
+        encTrunk = value7;
     }
 
 private:
     BufferedPort<Bottle> *readPort;
-    PID *pidcontroller_ankle, *pidcontroller_hip;
+    PID *pidcontroller_ankle_s, *pidcontroller_ankle_f, *pidcontroller_hip;
     IVelocityControl *velTrunk, *velRightLeg, *velLeftLeg;
     IPositionControl *posTrunk;
     IEncoders *encTrunk;

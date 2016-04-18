@@ -40,6 +40,10 @@ using namespace yarp::dev;
 #define Kp_ankle 0.1 //Proportional gain
 #define Kd_ankle 0.01 //Derivative gain
 #define Ki_ankle 0.001 //Integral gain
+    //Ankle parameters
+#define Kp_ankle_f 0.1 //Proportional gain
+#define Kd_ankle_f 0.01 //Derivative gain
+#define Ki_ankle_f 0.001 //Integral gain
     //Hip parameters
 #define Kp_hip 1 //Proportional gain
 #define Kd_hip 0.01 //Derivative gain
@@ -51,7 +55,8 @@ int main(int argc, char *argv[])
 {
 
     //CONSTRUCT PID CONTROLLER
-    PID pidcontroller_ankle(dt, max, min, Kp_ankle, Kd_ankle, Ki_ankle);    //Ankle PID
+    PID pidcontroller_ankle_s(dt, max, min, Kp_ankle, Kd_ankle, Ki_ankle);    //Ankle Sagittal PID
+    PID pidcontroller_ankle_f(dt, max, min, Kp_ankle_f, Kd_ankle_f, Ki_ankle_f);    //Ankle Frontal PID
     PID pidcontroller_hip(dt, max, min, Kp_hip, Kd_hip, Ki_hip);            //Hip PID
 
     //INITIALISE AND CHECK YARP
@@ -64,7 +69,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(10);                         //Wait for port to open [s]
+    Time::delay(13);                         //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
@@ -156,8 +161,8 @@ int main(int argc, char *argv[])
 
     //CONTROL LOOP
     MyRateThread myRateThread;
-    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, posTrunk,
-                     &pidcontroller_ankle, &pidcontroller_hip, &readPort, encTrunk);
+    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_s, &pidcontroller_ankle_f,
+                     &pidcontroller_hip, &readPort, encTrunk);
     myRateThread.start();
 
     //WAIT FOR ENTER AND EXIT LOOP
