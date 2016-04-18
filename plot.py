@@ -21,7 +21,6 @@ zmp = data[:,4]
 strategy = data[:,5]
 
 final_x = t[len(data)-1]
-print final_x
 
 plt.subplot(311)
 plt.plot(t, acc, linestyle='-', color='r', label='Sensor acceleration')
