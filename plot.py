@@ -11,40 +11,43 @@ This is for plotting data from the main program
 import matplotlib.pyplot as plt
 import numpy as np
 
-data=np.loadtxt('build/data.txt')
+sagittal_data = np.loadtxt('build/sagittal_data.txt')
+frontal_data = np.loadtxt('build/frontal_data.txt')
 
-t = data[:,0]
-acc = data[:,1]
-acc_avg = data[:,2]
-setpoint = data[:,3]
-zmp = data[:,4]
-strategy = data[:,5]
+t_x = sagittal_data[:,0]
+t_y = frontal_data[:,0]
+zmp_x = sagittal_data[:,1]
+zmp_y = frontal_data[:,1]
+setpoint_x = sagittal_data[:,2]
+setpoint_y = frontal_data[:,2]
+strategy = sagittal_data[:,3]
 
-final_x = t[len(data)-1]
+final_sagittal = t_x[len(sagittal_data)-1]
+final_frontal = t_y[len(frontal_data)-1]
 
 plt.subplot(311)
-plt.plot(t, acc, linestyle='-', color='r', label='Sensor acceleration')
-plt.plot(t, acc_avg, linestyle='-', color='b', label='Average acceleration')
-plt.axis([0, final_x, -11, 11])
-plt.title('Acceleration in X')
+plt.plot(t_x, setpoint_x, linestyle='-', color='r', label='Setpoint')
+plt.plot(t_x, zmp_x, linestyle='-', color='b', label='Current ZMP')
+plt.axis([0, final_sagittal, -11, 11])
+plt.title('Sagittal Plane')
 plt.xlabel('s')
-plt.ylabel('m/s^2')
+plt.ylabel('cm')
 plt.grid(True)
 plt.legend()
 
 plt.subplot(312)
-plt.plot(t, setpoint, linestyle='-', color='r', label='Setpoint')
-plt.plot(t, zmp, linestyle='-', color='b', label='Current ZMP')
-plt.axis([0, final_x, -11, 11])
-plt.title('Zero Moment Point')
+plt.plot(t_y, setpoint_y, linestyle='-', color='r', label='Setpoint')
+plt.plot(t_y, zmp_y, linestyle='-', color='b', label='Current ZMP')
+plt.axis([0, final_frontal, -11, 11])
+plt.title('Frontal Plane')
 plt.xlabel('s')
 plt.ylabel('cm')
 plt.grid(True)
 plt.legend()
 
 plt.subplot(313)
-plt.plot(t, strategy, linestyle='-', color='g', label='0 = Ankle / 5 = Hip')
-plt.axis([0, final_x, -11, 11])
+plt.plot(t_x, strategy, linestyle='-', color='g', label='0 = Ankle / 5 = Hip')
+plt.axis([0, final_sagittal, -11, 11])
 plt.title('Strategy')
 plt.xlabel('s')
 plt.grid(True)
