@@ -11,6 +11,12 @@ public:
         iteration = 1;
     }
 
+    virtual void threadRelease()
+    {
+        if (plane == 0) cout << "Sagittal thread closing..." << endl;
+        else cout << "Frontal thread closing..." << endl;
+    }
+
     void run()
     {
         getInitialTime();
@@ -63,23 +69,28 @@ public:
             actual_value = Xzmp;
             if (iteration==1){ setpoint = Xzmp; } //Get initial position as setpoint [cm]
             pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
-            //pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
+            pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-            getTrunkEncoders(); //Get encoders (Needed because trunk has relative encoders)
+            //Get encoders (Needed because trunk has relative encoders)
+            if (iteration == 1){getTrunkEncoders();}
 
             //JOINTS CONTROL
             if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
             {
                 velRightLeg->velocityMove(4, -pid_output_ankle); //Right Leg
+                Time::delay(0.01);
                 velLeftLeg->velocityMove(4, -pid_output_ankle); //Left Leg
+                Time::delay(0.01);
                 posTrunk->positionMove(1,initial_encoder); //Hip
             }
             else //Hip strategy
             {
                 velRightLeg->velocityMove(4, -pid_output_ankle); //Right Leg
+                Time::delay(0.01);
                 velLeftLeg->velocityMove(4, -pid_output_ankle); //Left Leg
+                Time::delay(0.01);
                 //velTrunk->velocityMove(1, pid_output_hip); //Hip
-                //posTrunk->positionMove(1,pid_output_hip);
+                posTrunk->positionMove(1,pid_output_hip);
             }
         }
         else //FRONTAL PLANE
@@ -91,9 +102,13 @@ public:
 
             //JOINTS CONTROL
             velRightLeg->velocityMove(5, -pid_output_ankle);
+            Time::delay(0.01);
             velRightLeg->velocityMove(1, -pid_output_ankle);
+            Time::delay(0.01);
             velLeftLeg->velocityMove(5, pid_output_ankle);
+            Time::delay(0.01);
             velLeftLeg->velocityMove(1, pid_output_ankle);
+            Time::delay(0.01);
         }
 
         //saveInFile(); //Save relevant data in external file for posterior plotting
@@ -129,25 +144,9 @@ public:
         encoders.resize(joints);
 
         //Get encoders
-        if (iteration == 1)
-        {
-            cout << "Reading encoders..." << endl;
-            while ( ! encTrunk->getEncoders(encoders.data())){}
-            for(int i=0;i<joints;i++){
-                cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
-            initial_encoder = encoders[1];
-        }
-        else
-        {
-            if (! encTrunk->getEncoders(encoders.data())){
-                cout << "[error] Problem acquiring robot trunk encoders." << endl;}
-            else
-            {
-                for(int i=0;i<joints;i++){
-                    cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
-            }
-        }
-        cout << endl;
+        cout << "Reading encoders..." << endl;
+        while ( ! encTrunk->getEncoders(encoders.data())){}
+        initial_encoder = encoders[1];
     }
 
     void printData()
@@ -157,25 +156,39 @@ public:
         cout << "Absolute time: " << int(act_time) << " s" << endl;
     }
 
-//    void saveInFile()
-//    {
-//        ofstream out;
-//        if (iteration==1) {out.open("data.txt",ios::trunc);}    //The first time deletes previous content
-//        else {out.open("data.txt",ios::app);}                   //The following times appends data to the file
-//        out << act_time << " ";
-//        out << x_acc << " ";
-//        out << x << " ";
-//        out << setpoint_x << " ";
-//        out << Xzmp << " ";
-//        if(capture_point < 0.12 && capture_point > -0.12)
-//            out << 0 << endl;
-//        else
-//            out << 5 << endl;
-//        out.close();
-//    }
+    void saveInFile()
+    {
+        ofstream out;
 
-    void set(int value0, IVelocityControl *value1, IVelocityControl *value2, IVelocityControl *value3, IPositionControl *value4,
-             PID *value5, PID *value6, BufferedPort<Bottle> *value7, IEncoders *value8)
+        if (plane == 0)
+        {
+            if (iteration==1) {out.open("sagittal_data.txt",ios::trunc);} //The first time deletes previous content
+            else {out.open("sagittal_data.txt",ios::app);} //The following times appends data to the file
+        }
+        else
+        {
+            if (iteration==1) {out.open("frontal_data.txt",ios::trunc);} //The first time deletes previous content
+            else {out.open("frontal_data.txt",ios::app);} //The following times appends data to the file
+        }
+
+        out << act_time << " ";
+        out << actual_value << " ";
+        out << setpoint << " ";
+
+        if (plane == 0)
+        {
+            if(capture_point < 0.12 && capture_point > -0.12)
+                out << 0 << endl;
+            else
+                out << 5 << endl;
+        }
+        else out << endl;
+
+        out.close();
+    }
+
+    void set(int value0, IVelocityControl *value1, IVelocityControl *value2, IVelocityControl *value3,
+             IPositionControl *value4, PID *value5, PID *value6, BufferedPort<Bottle> *value7, IEncoders *value8)
     {
         plane = value0;
         velRightLeg = value1;

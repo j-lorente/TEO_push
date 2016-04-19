@@ -1,11 +1,9 @@
 // -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
 
-/*  Juan Lorente                                */
-/*  Masters' Thesis                             */
-/*  Push-recovery experiments with robot TEO    */
+/*  Juan Lorente                                                             */
+/*  Masters' Thesis                                                          */
+/*  2D EQUILIBRIUM CONTROL BY INERTIAL PERCEPTION WITH HUMANOID ROBOT TEO    */
 
-//#include <stdio.h>
-//#include <stdlib.h>
 #include <math.h>
 #include <yarp/os/all.h>
 #include <yarp/dev/all.h>
@@ -63,7 +61,7 @@ int main(int argc, char *argv[])
     //OPEN YARP PORT
     BufferedPort<Bottle> readPort;          //YARP port for reading from sensor
     readPort.open("/inertial:i");
-    Time::delay(13);                         //Wait for port to open [s]
+    Time::delay(1);                         //Wait for port to open [s]
 
     //CONNECT TO IMU
     Network::connect("/inertial", "/inertial:i");
@@ -155,14 +153,15 @@ int main(int argc, char *argv[])
 
     //CONTROL LOOP
     MyRateThread myRateThread_Sagittal;
-    MyRateThread myRateThread_Frontal;
     myRateThread_Sagittal.set(0, velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_s,
                          &pidcontroller_hip, &readPort, encTrunk);
+    myRateThread_Sagittal.start();
+
+    MyRateThread myRateThread_Frontal;
     myRateThread_Frontal.set(1, velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_f,
                          &pidcontroller_hip, &readPort, encTrunk);
-
     myRateThread_Frontal.start();
-    myRateThread_Sagittal.start();
+
 
     //WAIT FOR ENTER AND EXIT LOOP
     char c;
