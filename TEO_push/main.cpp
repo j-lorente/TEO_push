@@ -34,16 +34,10 @@ using namespace yarp::dev;
 #define dt 0.05 //Loop interval time [assumption: s]
 #define max 10 //Maximum output value
 #define min -10 //Minimum output value
-//#define setpoint_x 0 //Desired value for X [cm]
-//#define setpoint_y 0 //Desired value for Y [cm]
     //Ankle parameters
 #define Kp_ankle 0.1 //Proportional gain
 #define Kd_ankle 0.01 //Derivative gain
 #define Ki_ankle 0.001 //Integral gain
-    //Ankle parameters
-#define Kp_ankle_f 0.1 //Proportional gain
-#define Kd_ankle_f 0.01 //Derivative gain
-#define Ki_ankle_f 0.001 //Integral gain
     //Hip parameters
 #define Kp_hip 1 //Proportional gain
 #define Kd_hip 0.01 //Derivative gain
@@ -56,8 +50,8 @@ int main(int argc, char *argv[])
 
     //CONSTRUCT PID CONTROLLER
     PID pidcontroller_ankle_s(dt, max, min, Kp_ankle, Kd_ankle, Ki_ankle);    //Ankle Sagittal PID
-    PID pidcontroller_ankle_f(dt, max, min, Kp_ankle_f, Kd_ankle_f, Ki_ankle_f);    //Ankle Frontal PID
-    PID pidcontroller_hip(dt, max, min, Kp_hip, Kd_hip, Ki_hip);            //Hip PID
+    PID pidcontroller_ankle_f(dt, max, min, Kp_ankle, Kd_ankle, Ki_ankle);    //Ankle Frontal PID
+    PID pidcontroller_hip(dt, max, min, Kp_hip, Kd_hip, Ki_hip);              //Hip PID
 
     //INITIALISE AND CHECK YARP
     Network yarp;
@@ -160,17 +154,23 @@ int main(int argc, char *argv[])
     }else cout << "[success] Robot trunk Encoders interface acquired." << endl;
 
     //CONTROL LOOP
-    MyRateThread myRateThread;
-    myRateThread.set(velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_s, &pidcontroller_ankle_f,
-                     &pidcontroller_hip, &readPort, encTrunk);
-    myRateThread.start();
+    MyRateThread myRateThread_Sagittal;
+    MyRateThread myRateThread_Frontal;
+    myRateThread_Sagittal.set(0, velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_s,
+                         &pidcontroller_hip, &readPort, encTrunk);
+    myRateThread_Frontal.set(1, velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_f,
+                         &pidcontroller_hip, &readPort, encTrunk);
+
+    myRateThread_Frontal.start();
+    myRateThread_Sagittal.start();
 
     //WAIT FOR ENTER AND EXIT LOOP
     char c;
     do {
         c=getchar();
     } while(c != '\n');
-    myRateThread.stop();
+    myRateThread_Sagittal.stop();
+    myRateThread_Frontal.stop();
     Time::delay(0.5);  //Wait for thread to stop [s]
 
     //CLOSE PORTS AND DEVICES

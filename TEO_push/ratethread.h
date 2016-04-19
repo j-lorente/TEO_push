@@ -22,8 +22,7 @@ public:
              cout << "[error] No data from sensor..." << endl;
              return;
         }
-        x_acc = input->get(3).asDouble();
-        x_sensor.push_front(x_acc); //Linear acceleration in X [m/s^2]
+        x_sensor.push_front(input->get(3).asDouble()); //Linear acceleration in X [m/s^2]
         x_sensor.pop_back();
         y_sensor.push_front(input->get(4).asDouble()); //Linear acceleration in Y [m/s^2]
         y_sensor.pop_back();
@@ -53,60 +52,51 @@ public:
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
-        //DETERMINING STRATEGY
-        lin_vel = x_sensor.at(0) * dt;
-        w = sqrt(g / (Zcom / 100));
-        capture_point = (lin_vel / w) + (Xzmp / 100);
-
-        //PID
-        actual_value_x = Xzmp;
-        actual_value_y = Yzmp;
-        if (iteration==1)
+        if (plane == 0) //SAGITTAL PLANE
         {
-            //Get initial position as setpoint [cm]
-            setpoint_x = Xzmp;
-            setpoint_y = Yzmp;
+            //DETERMINING STRATEGY
+            lin_vel = x_sensor.at(0) * dt;
+            w = sqrt(g / (Zcom / 100));
+            capture_point = (lin_vel / w) + (Xzmp / 100);
+
+            //PID
+            actual_value = Xzmp;
+            if (iteration==1){ setpoint = Xzmp; } //Get initial position as setpoint [cm]
+            pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
+            //pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
+
+            getTrunkEncoders(); //Get encoders (Needed because trunk has relative encoders)
+
+            //JOINTS CONTROL
+            if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
+            {
+                velRightLeg->velocityMove(4, -pid_output_ankle); //Right Leg
+                velLeftLeg->velocityMove(4, -pid_output_ankle); //Left Leg
+                posTrunk->positionMove(1,initial_encoder); //Hip
+            }
+            else //Hip strategy
+            {
+                velRightLeg->velocityMove(4, -pid_output_ankle); //Right Leg
+                velLeftLeg->velocityMove(4, -pid_output_ankle); //Left Leg
+                //velTrunk->velocityMove(1, pid_output_hip); //Hip
+                //posTrunk->positionMove(1,pid_output_hip);
+            }
         }
-        pid_output_ankle_sagittal = pidcontroller_ankle_s->calculate(setpoint_x, actual_value_x);
-        pid_output_ankle_frontal = pidcontroller_ankle_f->calculate(setpoint_y, actual_value_y);
-        //pid_output_hip = pidcontroller_hip->calculate(setpoint_x, actual_value_x);
-
-        getTrunkEncoders(); //Get encoders (Needed because trunk has relative encoders)
-
-        //JOINTS CONTROL
-        if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
+        else //FRONTAL PLANE
         {
-            //Right Leg
-            velRightLeg->velocityMove(4, -pid_output_ankle_sagittal);
-            velRightLeg->velocityMove(5, -pid_output_ankle_frontal);
-            velRightLeg->velocityMove(1, -pid_output_ankle_frontal);
+            //PID
+            actual_value = Yzmp;
+            if (iteration==1) { setpoint = Yzmp; } //Get initial position as setpoint [cm]
+            pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
 
-            //Left Leg
-            velLeftLeg->velocityMove(4, -pid_output_ankle_sagittal);
-            velLeftLeg->velocityMove(5, pid_output_ankle_frontal);
-            velLeftLeg->velocityMove(1, pid_output_ankle_frontal);
-
-            //Hip
-            //posTrunk->positionMove(1,initial_encoder);
-        }
-        else //Hip strategy
-        {
-            //Right Leg
-            velRightLeg->velocityMove(4, -pid_output_ankle_sagittal);
-            velRightLeg->velocityMove(5, -pid_output_ankle_frontal);
-            velRightLeg->velocityMove(1, -pid_output_ankle_frontal);
-
-            //Left Leg
-            velLeftLeg->velocityMove(4, -pid_output_ankle_sagittal);
-            velLeftLeg->velocityMove(5, pid_output_ankle_frontal);
-            velLeftLeg->velocityMove(1, pid_output_ankle_frontal);
-
-            //Hip
-            //velTrunk->velocityMove(1, pid_output_hip);
-            //posTrunk->positionMove(1,pid_output_hip);
+            //JOINTS CONTROL
+            velRightLeg->velocityMove(5, -pid_output_ankle);
+            velRightLeg->velocityMove(1, -pid_output_ankle);
+            velLeftLeg->velocityMove(5, pid_output_ankle);
+            velLeftLeg->velocityMove(1, pid_output_ankle);
         }
 
-        saveInFile(); //Save relevant data in external file for posterior plotting
+        //saveInFile(); //Save relevant data in external file for posterior plotting
 
         getCurrentTime();
 
@@ -162,66 +152,53 @@ public:
 
     void printData()
     {
-        cout << "Acceleration in X = " << x_robot << " m/s^2" << endl;
-        cout << "Acceleration in Y = " << y_robot << " m/s^2" << endl;
-        cout << "Acceleration in Z = " << z_robot << " m/s^2" << endl << endl;
-        cout << "ZMP = (" << Xzmp << ", " << Yzmp << ") cm" << endl;
-        cout << "Setpoint = " << setpoint_x << endl;
-        if (capture_point < 0.12 && capture_point > -0.12)
-            cout << "ANKLE STRATEGY" << endl;
-        else
-            cout << "HIP STRATEGY" << endl;
-        cout << "PID output (Ankle) = " << pid_output_ankle_sagittal << endl;
-        cout << "PID output (Hip) = " << pid_output_hip << endl << endl;
         cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
         cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
         cout << "Absolute time: " << int(act_time) << " s" << endl;
     }
 
-    void saveInFile()
-    {
-        ofstream out;
-        if (iteration==1) {out.open("data.txt",ios::trunc);}    //The first time deletes previous content
-        else {out.open("data.txt",ios::app);}                   //The following times appends data to the file
-        out << act_time << " ";
-        out << x_acc << " ";
-        out << x << " ";
-        out << setpoint_x << " ";
-        out << Xzmp << " ";
-        if(capture_point < 0.12 && capture_point > -0.12)
-            out << 0 << endl;
-        else
-            out << 5 << endl;
-        out.close();
-    }
+//    void saveInFile()
+//    {
+//        ofstream out;
+//        if (iteration==1) {out.open("data.txt",ios::trunc);}    //The first time deletes previous content
+//        else {out.open("data.txt",ios::app);}                   //The following times appends data to the file
+//        out << act_time << " ";
+//        out << x_acc << " ";
+//        out << x << " ";
+//        out << setpoint_x << " ";
+//        out << Xzmp << " ";
+//        if(capture_point < 0.12 && capture_point > -0.12)
+//            out << 0 << endl;
+//        else
+//            out << 5 << endl;
+//        out.close();
+//    }
 
-    void set(IVelocityControl *value, IVelocityControl *value0, IVelocityControl *value1, IPositionControl *value2,
-             PID *value3, PID *value4, PID *value5, BufferedPort<Bottle> *value6, IEncoders *value7)
+    void set(int value0, IVelocityControl *value1, IVelocityControl *value2, IVelocityControl *value3, IPositionControl *value4,
+             PID *value5, PID *value6, BufferedPort<Bottle> *value7, IEncoders *value8)
     {
-        velRightLeg = value;
-        velLeftLeg = value0;
-        velTrunk = value1;
-        posTrunk = value2;
-        pidcontroller_ankle_s = value3;
-        pidcontroller_ankle_f = value4;
-        pidcontroller_hip = value5;
-        readPort = value6;
-        encTrunk = value7;
+        plane = value0;
+        velRightLeg = value1;
+        velLeftLeg = value2;
+        velTrunk = value3;
+        posTrunk = value4;
+        pidcontroller_ankle = value5;
+        pidcontroller_hip = value6;
+        readPort = value7;
+        encTrunk = value8;
     }
 
 private:
     BufferedPort<Bottle> *readPort;
-    PID *pidcontroller_ankle_s, *pidcontroller_ankle_f, *pidcontroller_hip;
+    PID *pidcontroller_ankle, *pidcontroller_hip;
     IVelocityControl *velTrunk, *velRightLeg, *velLeftLeg;
     IPositionControl *posTrunk;
     IEncoders *encTrunk;
 
-    int iteration, joints;
-    double x, y, z, x_robot, y_robot, z_robot, x_acc;
+    int iteration, joints, plane;
+    double x, y, z, x_robot, y_robot, z_robot, Xzmp, Yzmp;
     double init_time, act_time, init_loop, act_loop, it_prev, it_time;
-    double Xzmp, Yzmp, actual_value_x, actual_value_y;
-    double pid_output_ankle_sagittal, pid_output_ankle_frontal, pid_output_hip;
-    double setpoint_x, setpoint_y;
+    double actual_value, setpoint, pid_output_ankle, pid_output_hip;
     double capture_point, lin_vel, w, initial_encoder;
 
     vector<double> encoders;
