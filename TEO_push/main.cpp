@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     Time::delay(0.5);  //Wait for ports connect [s]
 
     //CONNECT TO ROBOT LEFT LEG
-    Property optionsLeftLeg;                                //YARP class for storing name-value (key-value) pairs
+    Property *optionsLeftLeg;                                //YARP class for storing name-value (key-value) pairs
     optionsLeftLeg.put("device","remote_controlboard");     //YARP device
     optionsLeftLeg.put("remote","/teo/leftLeg");            //To what will be connected
     optionsLeftLeg.put("local","/juan/leftLeg");            //How will be called on YARP network
@@ -151,17 +151,17 @@ int main(int argc, char *argv[])
         return false;
     }else cout << "[success] Robot trunk Encoders interface acquired." << endl;
 
-    //CONTROL LOOP
+    //SAGITTAL CONTROL THREAD
     MyRateThread myRateThread_Sagittal;
     myRateThread_Sagittal.set(0, velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_s,
                          &pidcontroller_hip, &readPort, encTrunk);
     myRateThread_Sagittal.start();
 
+    //FRONTAL CONTROL THREAD
     MyRateThread myRateThread_Frontal;
     myRateThread_Frontal.set(1, velRightLeg, velLeftLeg, velTrunk, posTrunk, &pidcontroller_ankle_f,
                          &pidcontroller_hip, &readPort, encTrunk);
     myRateThread_Frontal.start();
-
 
     //WAIT FOR ENTER AND EXIT LOOP
     char c;
