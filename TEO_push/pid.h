@@ -6,7 +6,7 @@
 class PID
 {
     public:
-        // dt -  loop interval time [assumtion: s]
+        // dt -  loop interval time [s]
         // max - maximum output value
         // min - minimum output value
         // Kp -  proportional gain
