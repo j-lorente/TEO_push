@@ -4,7 +4,7 @@
 class MyRateThread : public RateThread
 {
 public:
-    MyRateThread() : RateThread(dt*1000.0) {    // Conversion to [ms]
+    MyRateThread() : RateThread(dt*1000.0) {    //Conversion to [ms]
         x_sensor.resize(samples);
         y_sensor.resize(samples);
         z_sensor.resize(samples);
@@ -13,7 +13,7 @@ public:
 
     virtual void threadRelease()
     {
-        if (plane == 0) cout << "Sagittal thread closing..." << endl;
+        if (plane.compare("sagittal") == 0) cout << "Sagittal thread closing..." << endl;
         else cout << "Frontal thread closing..." << endl;
     }
 
@@ -25,20 +25,25 @@ public:
         Bottle *input = readPort->read();
         if (input==NULL)
         {
-             cout << "[error] No data from sensor..." << endl;
-             return;
+            cout << "[error] No data from sensor..." << endl;
+            return;
         }
-        x_sensor.push_front(input->get(3).asDouble()); //Linear acceleration in X [m/s^2]
+        acc_x = input->get(3).asDouble(); //Linear acceleration in X [m/s^2]
+        x_sensor.push_front(acc_x);
         x_sensor.pop_back();
-        y_sensor.push_front(input->get(4).asDouble()); //Linear acceleration in Y [m/s^2]
+        acc_y = input->get(4).asDouble(); //Linear acceleration in Y [m/s^2]
+        y_sensor.push_front(acc_y);
         y_sensor.pop_back();
-        z_sensor.push_front(input->get(5).asDouble()); //Linear acceleration in Z [m/s^2]
+        acc_z = input->get(5).asDouble(); //Linear acceleration in Z [m/s^2]
+        z_sensor.push_front(acc_z);
         z_sensor.pop_back();
 
          //LOW-PASS FILTER
+         //Reset values
          x = 0.0;
          y = 0.0;
          z = 0.0;
+         //Compute average
          for(deque<double>::iterator it = x_sensor.begin(); it != x_sensor.end(); it++)
              x = x + *it;
          for(deque<double>::iterator it = y_sensor.begin(); it != y_sensor.end(); it++)
@@ -54,11 +59,11 @@ public:
         y_robot = y;
         z_robot = -z;
 
-        //CALCULATION OF THE ZERO MOMENT POINT
+        //ZERO MOMENT POINT COMPUTATION
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
 
-        if (plane == 0) //SAGITTAL PLANE
+        if (plane.compare("sagittal") == 0)     //SAGITTAL STRATEGY
         {
             //DETERMINING STRATEGY
             lin_vel = x_sensor.at(0) * dt;
@@ -71,47 +76,49 @@ public:
             pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
             pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
-            //Get encoders (Needed because trunk has relative encoders)
-            if (iteration == 1){getTrunkEncoders();}
+            //Get encoder (Needed because trunk has relative encoders)
+            //if (iteration == 1){getTrunkEncoders();}
 
-            //JOINTS CONTROL
-            if (capture_point < 0.12 && capture_point > -0.12) //Ankle strategy
+            //CONTROL
+            if (capture_point < 0.12 && capture_point > -0.12)      ///Ankle strategy
             {
-                velRightLeg->velocityMove(4, -pid_output_ankle); //Right Leg
+                //velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
                 Time::delay(0.01);
-                velLeftLeg->velocityMove(4, -pid_output_ankle); //Left Leg
+                //velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
                 Time::delay(0.01);
-                posTrunk->positionMove(1,initial_encoder); //Hip
+                //posTrunk->positionMove(1, initial_encoder);          //Hip
+                Time::delay(0.01);
             }
-            else //Hip strategy
+            else    ///Hip strategy
             {
-                velRightLeg->velocityMove(4, -pid_output_ankle); //Right Leg
+                //velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
                 Time::delay(0.01);
-                velLeftLeg->velocityMove(4, -pid_output_ankle); //Left Leg
+                //velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
                 Time::delay(0.01);
-                //velTrunk->velocityMove(1, pid_output_hip); //Hip
-                posTrunk->positionMove(1,pid_output_hip);
+                //velTrunk->velocityMove(1, pid_output_hip);         //Hip
+                //posTrunk->positionMove(1, pid_output_hip);
+                Time::delay(0.01);
             }
         }
-        else //FRONTAL PLANE
+        else //FRONTAL STRATEGY
         {
             //PID
             actual_value = Yzmp;
             if (iteration==1) { setpoint = Yzmp; } //Get initial position as setpoint [cm]
             pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
 
-            //JOINTS CONTROL
-            velRightLeg->velocityMove(5, -pid_output_ankle);
+            //CONTROL
+            //velRightLeg->velocityMove(5, -pid_output_ankle);      //Right Hip
             Time::delay(0.01);
-            velRightLeg->velocityMove(1, -pid_output_ankle);
+            //velRightLeg->velocityMove(1, -pid_output_ankle);      //Right Ankle
             Time::delay(0.01);
-            velLeftLeg->velocityMove(5, pid_output_ankle);
+            //velLeftLeg->velocityMove(5, pid_output_ankle);        //Left Hip
             Time::delay(0.01);
-            velLeftLeg->velocityMove(1, pid_output_ankle);
+            //velLeftLeg->velocityMove(1, pid_output_ankle);        //Right Ankle
             Time::delay(0.01);
         }
 
-        //saveInFile(); //Save relevant data in external file for posterior plotting
+        //saveInFile();
 
         getCurrentTime();
 
@@ -144,13 +151,32 @@ public:
         encoders.resize(joints);
 
         //Get encoders
-        cout << "Reading encoders..." << endl;
-        while ( ! encTrunk->getEncoders(encoders.data())){}
-        initial_encoder = encoders[1];
+        if (iteration == 1)
+        {
+            cout << "Reading encoders..." << endl;
+            while ( ! encTrunk->getEncoders(encoders.data())){}
+            for(int i=0;i<joints;i++){
+                cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
+            initial_encoder = encoders[1];
+        }
+        else
+        {
+            if (! encTrunk->getEncoders(encoders.data())){
+                cout << "[error] Problem acquiring robot trunk encoders." << endl;}
+            else
+            {
+                for(int i=0;i<joints;i++){
+                    cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
+            }
+        }
+        cout << endl;
     }
 
     void printData()
     {
+        cout << "Acceleraction in X: " << acc_x << " m/s²" << endl;
+        cout << "Acceleraction in Y: " << acc_y << " m/s²" << endl;
+        cout << "Acceleraction in Z: " << acc_z << " m/s²" << endl << endl;
         cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
         cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
         cout << "Absolute time: " << int(act_time) << " s" << endl;
@@ -160,7 +186,7 @@ public:
     {
         ofstream out;
 
-        if (plane == 0)
+        if (plane.compare("sagittal") == 0)
         {
             if (iteration==1) {out.open("sagittal_data.txt",ios::trunc);} //The first time deletes previous content
             else {out.open("sagittal_data.txt",ios::app);} //The following times appends data to the file
@@ -175,7 +201,7 @@ public:
         out << actual_value << " ";
         out << setpoint << " ";
 
-        if (plane == 0)
+        if (plane.compare("sagittal") == 0)
         {
             if(capture_point < 0.12 && capture_point > -0.12)
                 out << 0 << endl;
@@ -187,18 +213,19 @@ public:
         out.close();
     }
 
-    void set(int value0, IVelocityControl *value1, IVelocityControl *value2, IVelocityControl *value3,
-             IPositionControl *value4, PID *value5, PID *value6, BufferedPort<Bottle> *value7, IEncoders *value8)
+    void set(std::string _plane, BufferedPort<Bottle> *_readPort, IVelocityControl *_velRightLeg,
+             IVelocityControl *_velLeftLeg, IVelocityControl *_velTrunk, IPositionControl *_posTrunk,
+             IEncoders *_encTrunk, PID *_pidcontroller_ankle, PID *_pidcontroller_hip)
     {
-        plane = value0;
-        velRightLeg = value1;
-        velLeftLeg = value2;
-        velTrunk = value3;
-        posTrunk = value4;
-        pidcontroller_ankle = value5;
-        pidcontroller_hip = value6;
-        readPort = value7;
-        encTrunk = value8;
+        plane = _plane;
+        velRightLeg = _velRightLeg;
+        velLeftLeg = _velLeftLeg;
+        velTrunk = _velTrunk;
+        posTrunk = _posTrunk;
+        pidcontroller_ankle = _pidcontroller_ankle;
+        pidcontroller_hip = _pidcontroller_hip;
+        readPort = _readPort;
+        encTrunk = _encTrunk;
     }
 
 private:
@@ -208,7 +235,10 @@ private:
     IPositionControl *posTrunk;
     IEncoders *encTrunk;
 
-    int iteration, joints, plane;
+    double acc_x, acc_y, acc_z;
+
+    int iteration, joints;
+    std::string plane;
     double x, y, z, x_robot, y_robot, z_robot, Xzmp, Yzmp;
     double init_time, act_time, init_loop, act_loop, it_prev, it_time;
     double actual_value, setpoint, pid_output_ankle, pid_output_hip;
