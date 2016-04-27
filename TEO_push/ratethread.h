@@ -81,7 +81,7 @@ public:
             velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
             velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
             //velTrunk->velocityMove(1, pid_output_hip);         //Hip
-            posTrunk->positionMove(1,pid_output_hip);
+            posTrunk->positionMove(1,pid_output_hip); //TEO's velocity control not working
         }
 
         saveInFile(); //Save relevant data in external file for posterior plotting
