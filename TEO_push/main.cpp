@@ -37,9 +37,11 @@ using namespace yarp::dev;
 #define Kd_ankle 0.01 //Derivative gain
 #define Ki_ankle 0.001 //Integral gain
     //Hip parameters
-#define Kp_hip 1 //Proportional gain
+#define Kp_hip 10 //Proportional gain
 #define Kd_hip 0.01 //Derivative gain
 #define Ki_hip 0.001 //Integral gain
+
+#define seconds 1 //DELAY FOR EXPERIMENTS
 
 #include "ratethread.h"
 
@@ -150,6 +152,10 @@ int main(int argc, char *argv[])
         cout << "[error] Problems acquiring robot trunk Encoders interface." << endl;
         return false;
     }else cout << "[success] Robot trunk Encoders interface acquired." << endl;
+
+
+    //DELAY FOR EXPERIMENTS
+    Time::delay(seconds);
 
     //SAGITTAL CONTROL THREAD
     MyRateThread SagittalThread;

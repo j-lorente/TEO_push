@@ -13,12 +13,13 @@ public:
 
     virtual void threadRelease()
     {
-        if (plane.compare("sagittal") == 0) cout << "Sagittal thread closing..." << endl;
-        else cout << "Frontal thread closing..." << endl;
+        if (plane.compare("sagittal") == 0) cout << "RATETHREAD: Sagittal thread closed." << endl;
+        else cout << "RATETHREAD: Frontal thread closed." << endl;
     }
 
     void run()
     {
+        cout << "it: " << iteration << endl;
         getInitialTime();
 
         //READ SENSOR
@@ -39,11 +40,9 @@ public:
         z_sensor.pop_back();
 
          //LOW-PASS FILTER
-         //Reset values
          x = 0.0;
          y = 0.0;
          z = 0.0;
-         //Compute average
          for(deque<double>::iterator it = x_sensor.begin(); it != x_sensor.end(); it++)
              x = x + *it;
          for(deque<double>::iterator it = y_sensor.begin(); it != y_sensor.end(); it++)
@@ -77,26 +76,27 @@ public:
             pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
             //Get encoder (Needed because trunk has relative encoders)
-            //if (iteration == 1){getTrunkEncoders();}
+            getTrunkEncoders();
 
             //CONTROL
             if (capture_point < 0.12 && capture_point > -0.12)      ///Ankle strategy
             {
-                //velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
+                velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
                 Time::delay(0.01);
-                //velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
+                velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
                 Time::delay(0.01);
-                //posTrunk->positionMove(1, initial_encoder);          //Hip
+                posTrunk->positionMove(1, initial_encoder);         //Hip
                 Time::delay(0.01);
             }
-            else    ///Hip strategy
+            else                                                    ///Hip strategy
             {
-                //velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
+                velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
                 Time::delay(0.01);
-                //velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
+                velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
                 Time::delay(0.01);
-                //velTrunk->velocityMove(1, pid_output_hip);         //Hip
-                //posTrunk->positionMove(1, pid_output_hip);
+                //velTrunk->velocityMove(1, pid_output_hip);        //Hip
+                position = encoders[1] + pid_output_hip * dt;
+                posTrunk->positionMove(1, position);
                 Time::delay(0.01);
             }
         }
@@ -108,17 +108,17 @@ public:
             pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
 
             //CONTROL
-            //velRightLeg->velocityMove(5, -pid_output_ankle);      //Right Hip
+            velRightLeg->velocityMove(5, -pid_output_ankle);      //Right Hip
             Time::delay(0.01);
-            //velRightLeg->velocityMove(1, -pid_output_ankle);      //Right Ankle
+            velRightLeg->velocityMove(1, -pid_output_ankle);      //Right Ankle
             Time::delay(0.01);
-            //velLeftLeg->velocityMove(5, pid_output_ankle);        //Left Hip
+            velLeftLeg->velocityMove(5, pid_output_ankle);        //Left Hip
             Time::delay(0.01);
-            //velLeftLeg->velocityMove(1, pid_output_ankle);        //Right Ankle
+            velLeftLeg->velocityMove(1, pid_output_ankle);        //Right Ankle
             Time::delay(0.01);
         }
 
-        //saveInFile();
+        saveInFile();
 
         getCurrentTime();
 
@@ -154,32 +154,26 @@ public:
         if (iteration == 1)
         {
             cout << "Reading encoders..." << endl;
-            while ( ! encTrunk->getEncoders(encoders.data())){}
-            for(int i=0;i<joints;i++){
-                cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
+            while ( ! encTrunk->getEncoders(encoders.data()) ){}
             initial_encoder = encoders[1];
+            cout << "Trunk encoder [" << 1 << "]: " << initial_encoder << endl << endl;
         }
-        else
-        {
-            if (! encTrunk->getEncoders(encoders.data())){
-                cout << "[error] Problem acquiring robot trunk encoders." << endl;}
-            else
-            {
-                for(int i=0;i<joints;i++){
-                    cout << "Trunk encoder [" << i << "]: " << encoders[i] << endl;}
-            }
-        }
-        cout << endl;
+        else { encTrunk->getEncoders(encoders.data()); }
     }
 
     void printData()
     {
-        cout << "Acceleraction in X: " << acc_x << " m/s²" << endl;
-        cout << "Acceleraction in Y: " << acc_y << " m/s²" << endl;
-        cout << "Acceleraction in Z: " << acc_z << " m/s²" << endl << endl;
-        cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
-        cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
-        cout << "Absolute time: " << int(act_time) << " s" << endl;
+        if (plane.compare("sagittal") == 0)
+        {
+            cout << "Acceleraction in X: " << acc_x << " m/s²" << endl;
+            cout << "Acceleraction in Y: " << acc_y << " m/s²" << endl;
+            cout << "Acceleraction in Z: " << acc_z << " m/s²" << endl << endl;
+            cout << "PID output hip: " << pid_output_hip << " deg/s" << endl;
+            cout << "Hip position command: " << position << " deg" << endl << endl;
+            cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
+            cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
+            cout << "Absolute time: " << int(act_time) << " s" << endl;
+        }
     }
 
     void saveInFile()
@@ -247,6 +241,8 @@ private:
     vector<double> encoders;
 
     deque<double> x_sensor, y_sensor, z_sensor;
+
+    double position;
 };
 
 #endif
