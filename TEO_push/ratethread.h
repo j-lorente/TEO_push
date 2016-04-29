@@ -19,7 +19,6 @@ public:
 
     void run()
     {
-        cout << "it: " << iteration << endl;
         getInitialTime();
 
         //READ SENSOR
@@ -54,13 +53,15 @@ public:
          z = z / samples;
 
         //CONVERSION FROM SENSOR COORDINATES TO ROBOT COORDINATES
-        x_robot = -x;
-        y_robot = y;
-        z_robot = -z;
+         x_robot = x;
+         y_robot = -y;
+         z_robot = z;
 
         //ZERO MOMENT POINT COMPUTATION
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
+        Xzmp2 = Xcom - (Zcom / z) * x; //ZMP X coordinate [cm]
+        Yzmp2 = Ycom - (Zcom / z) * y; //ZMP Y coordinate [cm]
 
         if (plane.compare("sagittal") == 0)     //SAGITTAL STRATEGY
         {
@@ -82,22 +83,24 @@ public:
             if (capture_point < 0.12 && capture_point > -0.12)      ///Ankle strategy
             {
                 velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
-                Time::delay(0.01);
+                Time::delay(0.005);
                 velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
-                Time::delay(0.01);
+                Time::delay(0.005);
                 posTrunk->positionMove(1, initial_encoder);         //Hip
-                Time::delay(0.01);
+                Time::delay(0.005);
             }
             else                                                    ///Hip strategy
             {
                 velLeftLeg->velocityMove(4, -pid_output_ankle);     //Left Ankle
-                Time::delay(0.01);
+                Time::delay(0.005);
                 velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
-                Time::delay(0.01);
+                Time::delay(0.005);
                 //velTrunk->velocityMove(1, pid_output_hip);        //Hip
-                position = encoders[1] + pid_output_hip * dt;
-                posTrunk->positionMove(1, position);
-                Time::delay(0.01);
+
+                //Using position control if velocity is not available
+                posTrunk->positionMove(1, initial_encoder + pid_output_hip);
+
+                Time::delay(0.005);
             }
         }
         else //FRONTAL STRATEGY
@@ -109,23 +112,25 @@ public:
 
             //CONTROL
             velRightLeg->velocityMove(5, -pid_output_ankle);      //Right Hip
-            Time::delay(0.01);
+            Time::delay(0.005);
             velRightLeg->velocityMove(1, -pid_output_ankle);      //Right Ankle
-            Time::delay(0.01);
+            Time::delay(0.005);
             velLeftLeg->velocityMove(5, pid_output_ankle);        //Left Hip
-            Time::delay(0.01);
+            Time::delay(0.005);
             velLeftLeg->velocityMove(1, pid_output_ankle);        //Right Ankle
-            Time::delay(0.01);
+            Time::delay(0.005);
         }
 
-        saveInFile();
+        //saveInFile();
 
         getCurrentTime();
 
-        printData();
-
-        cout << endl << "Press ENTER to exit..." << endl;
-        cout << "*******************************" << endl << endl;
+        if (plane.compare("sagittal") == 0) //Cleaner print
+        {
+            printData();
+            cout << endl << "Press ENTER to exit..." << endl;
+            cout << "*******************************" << endl << endl;
+        }
 
         iteration++;
     }
@@ -168,8 +173,7 @@ public:
             cout << "Acceleraction in X: " << acc_x << " m/s²" << endl;
             cout << "Acceleraction in Y: " << acc_y << " m/s²" << endl;
             cout << "Acceleraction in Z: " << acc_z << " m/s²" << endl << endl;
-            cout << "PID output hip: " << pid_output_hip << " deg/s" << endl;
-            cout << "Hip position command: " << position << " deg" << endl << endl;
+            cout << "ZMP: (" << Xzmp << ", " << Yzmp << ")" << endl << endl;
             cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
             cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
             cout << "Absolute time: " << int(act_time) << " s" << endl;
@@ -229,20 +233,16 @@ private:
     IPositionControl *posTrunk;
     IEncoders *encTrunk;
 
-    double acc_x, acc_y, acc_z;
-
     int iteration, joints;
     std::string plane;
-    double x, y, z, x_robot, y_robot, z_robot, Xzmp, Yzmp;
+    double acc_x, acc_y, acc_z, x, y, z, x_robot, y_robot, z_robot, Xzmp, Yzmp;
     double init_time, act_time, init_loop, act_loop, it_prev, it_time;
-    double actual_value, setpoint, pid_output_ankle, pid_output_hip;
-    double capture_point, lin_vel, w, initial_encoder;
-
+    double actual_value, setpoint, pid_output_ankle, pid_output_hip, initial_encoder;
+    double capture_point, lin_vel, w;
     vector<double> encoders;
-
     deque<double> x_sensor, y_sensor, z_sensor;
 
-    double position;
+    double position; //Using position control if velocity is not available
 };
 
 #endif
