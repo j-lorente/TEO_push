@@ -60,8 +60,6 @@ public:
         //ZERO MOMENT POINT COMPUTATION
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
         Yzmp = Ycom - (Zcom / z_robot) * y_robot; //ZMP Y coordinate [cm]
-        Xzmp2 = Xcom - (Zcom / z) * x; //ZMP X coordinate [cm]
-        Yzmp2 = Ycom - (Zcom / z) * y; //ZMP Y coordinate [cm]
 
         if (plane.compare("sagittal") == 0)     //SAGITTAL STRATEGY
         {
@@ -73,6 +71,7 @@ public:
             //PID
             actual_value = Xzmp;
             if (iteration==1){ setpoint = Xzmp; } //Get initial position as setpoint [cm]
+            //setpoint = 0;
             pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
             pid_output_hip = pidcontroller_hip->calculate(setpoint, actual_value);
 
@@ -95,7 +94,7 @@ public:
                 Time::delay(0.005);
                 velRightLeg->velocityMove(4, -pid_output_ankle);    //Right Ankle
                 Time::delay(0.005);
-                //velTrunk->velocityMove(1, pid_output_hip);        //Hip
+                velTrunk->velocityMove(1, pid_output_hip);        //Hip
 
                 //Using position control if velocity is not available
                 posTrunk->positionMove(1, initial_encoder + pid_output_hip);
@@ -108,6 +107,7 @@ public:
             //PID
             actual_value = Yzmp;
             if (iteration==1) { setpoint = Yzmp; } //Get initial position as setpoint [cm]
+            //setpoint = 0;
             pid_output_ankle = pidcontroller_ankle->calculate(setpoint, actual_value);
 
             //CONTROL
@@ -125,7 +125,7 @@ public:
 
         getCurrentTime();
 
-        if (plane.compare("sagittal") == 0) //Cleaner print
+        if (plane.compare("sagittal") == 0) //Only one thread printing
         {
             printData();
             cout << endl << "Press ENTER to exit..." << endl;
@@ -168,16 +168,13 @@ public:
 
     void printData()
     {
-        if (plane.compare("sagittal") == 0)
-        {
-            cout << "Acceleraction in X: " << acc_x << " m/s²" << endl;
-            cout << "Acceleraction in Y: " << acc_y << " m/s²" << endl;
-            cout << "Acceleraction in Z: " << acc_z << " m/s²" << endl << endl;
-            cout << "ZMP: (" << Xzmp << ", " << Yzmp << ")" << endl << endl;
-            cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
-            cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
-            cout << "Absolute time: " << int(act_time) << " s" << endl;
-        }
+        cout << "Acceleraction in X: " << acc_x << " m/s²" << endl;
+        cout << "Acceleraction in Y: " << acc_y << " m/s²" << endl;
+        cout << "Acceleraction in Z: " << acc_z << " m/s²" << endl << endl;
+        cout << "ZMP: (" << Xzmp << ", " << Yzmp << ")" << endl << endl;
+        cout << "Iteration time: " << act_loop*1000 << " ms" << endl;
+        cout << "Time between iterations: " << it_time*1000 << " ms" << endl;
+        cout << "Absolute time: " << int(act_time) << " s" << endl;
     }
 
     void saveInFile()

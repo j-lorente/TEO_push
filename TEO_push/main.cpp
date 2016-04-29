@@ -1,7 +1,7 @@
 // -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
 
 /*  Juan Lorente                                                             */
-/*  Masters' Thesis                                                          */
+/*  Masters' Thesis (UC3M)                                                   */
 /*  2D EQUILIBRIUM CONTROL BY INERTIAL PERCEPTION WITH HUMANOID ROBOT TEO    */
 
 #include <math.h>
