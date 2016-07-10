@@ -45,9 +45,9 @@ public:
          z = z / samples;
 
         //CONVERSION FROM SENSOR COORDINATES TO ROBOT COORDINATES
-        x_robot = -x;
-        y_robot = y;
-        z_robot = -z;
+        x_robot = x;
+        y_robot = -y;
+        z_robot = z;
 
         //CALCULATION OF THE ZERO MOMENT POINT
         Xzmp = Xcom - (Zcom / z_robot) * x_robot; //ZMP X coordinate [cm]
